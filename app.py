@@ -5,6 +5,7 @@ import os
 import time
 from datetime import datetime, timedelta, timezone
 from io import BytesIO
+from pypdf import PdfReader, PdfWriter
 
 # Try importing ReportLab for PDF generation
 try:
@@ -17,7 +18,7 @@ except ImportError:
     REPORTLAB_AVAILABLE = False
 
 # Page Configuration
-st.set_page_config(page_title="Muhit's HSC Tracker", page_icon="⚡", layout="wide")
+st.set_page_config(page_title="Muhit's HSC Tracker & Workspace", page_icon="⚡", layout="wide")
 
 # Directory Setup
 DATA_DIR = "tracker_data"
@@ -174,7 +175,7 @@ if remaining_days < 0:
 st.sidebar.title("⚡ Muhit's Portal")
 st.sidebar.markdown("**Navigation**")
 
-page_selection = ["🏠 Dashboard & Focus Station", "📖 Syllabus Tracker"]
+page_selection = ["🏠 Dashboard & Focus Station", "📖 Syllabus Tracker", "📄 PDF Tool"]
 
 def handle_nav_change():
     if st.session_state.is_focus_running:
@@ -185,11 +186,15 @@ def handle_nav_change():
 if "page" not in st.session_state:
     st.session_state.page = "🏠 Dashboard & Focus Station"
 
+# Determine radio index safely
+page_index_map = {page_selection[0]: 0, page_selection[1]: 1, page_selection[2]: 2}
+current_index = page_index_map.get(st.session_state.page, 0)
+
 # Sync sidebar radio with session state cleanly
 sidebar_selection = st.sidebar.radio(
     "Go to", 
     page_selection, 
-    index=0 if st.session_state.page == page_selection[0] else 1, 
+    index=current_index, 
     on_change=handle_nav_change,
     key="sidebar_radio"
 )
@@ -417,7 +422,7 @@ if st.session_state.page == "🏠 Dashboard & Focus Station":
 
         # Centered Menu Buttons & Copyright Footer
         st.markdown("<br><hr style='border: 1px solid #ddd;'>", unsafe_allow_html=True)
-        c_space1, c_btn1, c_btn2, c_space2 = st.columns([1, 1, 1, 1])
+        c_space1, c_btn1, c_btn2, c_btn3, c_space2 = st.columns([1, 1, 1, 1, 1])
         with c_btn1:
             if st.button("🏠 Dashboard"):
                 st.session_state.page = "🏠 Dashboard & Focus Station"
@@ -425,6 +430,10 @@ if st.session_state.page == "🏠 Dashboard & Focus Station":
         with c_btn2:
             if st.button("📖 Syllabus Tracker"):
                 st.session_state.page = "📖 Syllabus Tracker"
+                st.rerun()
+        with c_btn3:
+            if st.button("📄 PDF Tool"):
+                st.session_state.page = "📄 PDF Tool"
                 st.rerun()
         
         st.markdown("<p style='text-align: center; color: gray; font-size: 0.85rem; margin-top: 15px;'>copyright@muhit'sportal</p>", unsafe_allow_html=True)
@@ -551,7 +560,7 @@ elif st.session_state.page == "📖 Syllabus Tracker":
 
         # Centered Menu Buttons & Copyright Footer
         st.markdown("<br><hr style='border: 1px solid #ddd;'>", unsafe_allow_html=True)
-        c_space1, c_btn1, c_btn2, c_space2 = st.columns([1, 1, 1, 1])
+        c_space1, c_btn1, c_btn2, c_btn3, c_space2 = st.columns([1, 1, 1, 1, 1])
         with c_btn1:
             if st.button("🏠 Dashboard"):
                 st.session_state.page = "🏠 Dashboard & Focus Station"
@@ -559,6 +568,100 @@ elif st.session_state.page == "📖 Syllabus Tracker":
         with c_btn2:
             if st.button("📖 Syllabus Tracker"):
                 st.session_state.page = "📖 Syllabus Tracker"
+                st.rerun()
+        with c_btn3:
+            if st.button("📄 PDF Tool"):
+                st.session_state.page = "📄 PDF Tool"
+                st.rerun()
+        
+        st.markdown("<p style='text-align: center; color: gray; font-size: 0.85rem; margin-top: 15px;'>copyright@muhit'sportal</p>", unsafe_allow_html=True)
+
+# ----------------------------------------------------
+# PAGE 3: PDF TOOL (2-in-1 Auto-Layout Tool)
+# ----------------------------------------------------
+elif st.session_state.page == "📄 PDF Tool":
+    if st.session_state.is_focus_running:
+        st.error("⚠️ Focus session is currently active! Be Consistent and Determined! Complete your session first.")
+    else:
+        st.markdown("<h2 style='text-align: center; color: #4CAF50;'>👨‍💻 Mahathir Muhit Personal Workspace</h2>", unsafe_allow_html=True)
+        st.markdown("<h3 style='text-align: center; color: #888888;'>🤖 ২-ইন-১ পিডিএফ অটো-লেআউট টুল (নিখুঁত রেশিও)</h3>", unsafe_allow_html=True)
+        st.write("---")
+        st.write("ফাইল আপলোড করুন; ল্যান্ডস্কেপ স্লাইডগুলো কোনো বর্ডার বা কাটিং ছাড়াই ১টি পেজে ৩টি করে নিখুঁতভাবে বসে যাবে।")
+
+        # পিডিএফ ফাইল আপলোডার
+        uploaded_files = st.file_uploader("আপনার পিডিএফ ফাইলগুলো এখানে সিলেক্ট করুন", type=["pdf"], accept_multiple_files=True, key="pdf_tool_uploader")
+
+        if uploaded_files:
+            if st.button("🔄 প্রসেসিং শুরু করুন", key="pdf_process_btn"):
+                with st.spinner("কাজ চলছে... নিখুঁত রেশিওতে লেআউট তৈরি হচ্ছে..."):
+                    try:
+                        # ১. প্রথমে ফাইলগুলো মার্জ করা
+                        merged_writer = PdfWriter()
+                        for uploaded_file in uploaded_files:
+                            reader = PdfReader(uploaded_file)
+                            for page_obj in reader.pages:
+                                merged_writer.add_page(page_obj)
+                        
+                        temp_merged = "temp_merged.pdf"
+                        with open(temp_merged, "wb") as f:
+                            merged_writer.write(f)
+                        
+                        # ২. স্লাইডের আসল রেশিও অনুযায়ী ফুল-স্ক্রিন লেআউট তৈরি
+                        output_pdf = "processed_output.pdf"
+                        final_writer = PdfWriter()
+                        reader = PdfReader(temp_merged)
+                        total_pages = len(reader.pages)
+                        
+                        for i in range(0, total_pages, 3):
+                            first_page = reader.pages[i]
+                            orig_w = float(first_page.mediabox.width)
+                            orig_h = float(first_page.mediabox.height)
+                            
+                            new_w = orig_w
+                            new_h = orig_h * 3
+                            
+                            new_page = final_writer.add_blank_page(width=new_w, height=new_h)
+                            
+                            # ৩টি স্লাইড ওপর-নিচে নিখুঁতভাবে বসানো
+                            for j in range(3):
+                                if i + j < total_pages:
+                                    current_slide = reader.pages[i + j]
+                                    ty = (2 - j) * orig_h
+                                    new_page.merge_translated_page(current_slide, tx=0, ty=ty)
+                        
+                        with open(output_pdf, "wb") as f:
+                            final_writer.write(f)
+                        
+                        # টেম্পোরারি ফাইল রিমুভ করা
+                        if os.path.exists(temp_merged):
+                            os.remove(temp_merged)
+                            
+                        st.success("🎉 মাহাথির, আপনার নিখুঁত ফুল-স্ক্রিন ফাইলটি তৈরি হয়েছে!")
+                        with open(output_pdf, "rb") as f:
+                            st.download_button(
+                                label="📥 প্রসেসড পিডিএফ ডাউনলোড করুন",
+                                data=f,
+                                file_name="final_output.pdf",
+                                mime="application/pdf",
+                                key="pdf_download_btn"
+                            )
+                    except Exception as e:
+                        st.error(f"দুঃখিত, একটি সমস্যা হয়েছে: {e}")
+
+        # Centered Menu Buttons & Copyright Footer
+        st.markdown("<br><hr style='border: 1px solid #ddd;'>", unsafe_allow_html=True)
+        c_space1, c_btn1, c_btn2, c_btn3, c_space2 = st.columns([1, 1, 1, 1, 1])
+        with c_btn1:
+            if st.button("🏠 Dashboard"):
+                st.session_state.page = "🏠 Dashboard & Focus Station"
+                st.rerun()
+        with c_btn2:
+            if st.button("📖 Syllabus Tracker"):
+                st.session_state.page = "📖 Syllabus Tracker"
+                st.rerun()
+        with c_btn3:
+            if st.button("📄 PDF Tool"):
+                st.session_state.page = "📄 PDF Tool"
                 st.rerun()
         
         st.markdown("<p style='text-align: center; color: gray; font-size: 0.85rem; margin-top: 15px;'>copyright@muhit'sportal</p>", unsafe_allow_html=True)
