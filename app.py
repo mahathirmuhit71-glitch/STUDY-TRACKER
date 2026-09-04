@@ -1,3 +1,4 @@
+import streamlit as str_module
 import streamlit as st
 import pandas as pd
 import json
@@ -175,7 +176,14 @@ if remaining_days < 0:
 st.sidebar.title("⚡ Muhit's Portal")
 st.sidebar.markdown("**Navigation**")
 
-page_selection = ["🏠 Dashboard & Focus Station", "📖 Syllabus Tracker", "📄 PDF Tool"]
+page_selection = [
+    "🏠 Dashboard & Focus Station", 
+    "📖 Syllabus Tracker", 
+    "📄 PDF Tool", 
+    "🧪 Engineering Chemistry", 
+    "🎵 গানের জগত", 
+    "🌿 মন খারাপের দিনে"
+]
 
 def handle_nav_change():
     if st.session_state.is_focus_running:
@@ -187,7 +195,7 @@ if "page" not in st.session_state:
     st.session_state.page = "🏠 Dashboard & Focus Station"
 
 # Determine radio index safely
-page_index_map = {page_selection[0]: 0, page_selection[1]: 1, page_selection[2]: 2}
+page_index_map = {page_selection[i]: i for i in range(len(page_selection))}
 current_index = page_index_map.get(st.session_state.page, 0)
 
 # Sync sidebar radio with session state cleanly
@@ -438,24 +446,6 @@ if st.session_state.page == "🏠 Dashboard & Focus Station":
         else:
             st.warning("ReportLab library is not installed.")
 
-        # Centered Menu Buttons & Copyright Footer
-        st.markdown("<br><hr style='border: 1px solid #ddd;'>", unsafe_allow_html=True)
-        c_space1, c_btn1, c_btn2, c_btn3, c_space2 = st.columns([1, 1, 1, 1, 1])
-        with c_btn1:
-            if st.button("🏠 Dashboard"):
-                st.session_state.page = "🏠 Dashboard & Focus Station"
-                st.rerun()
-        with c_btn2:
-            if st.button("📖 Syllabus Tracker"):
-                st.session_state.page = "📖 Syllabus Tracker"
-                st.rerun()
-        with c_btn3:
-            if st.button("📄 PDF Tool"):
-                st.session_state.page = "📄 PDF Tool"
-                st.rerun()
-        
-        st.markdown("<p style='text-align: center; color: gray; font-size: 0.85rem; margin-top: 15px;'>copyright@muhit'sportal</p>", unsafe_allow_html=True)
-
 # ----------------------------------------------------
 # PAGE 2: SYLLABUS TRACKER & INTEGRATED PDF REPORTS
 # ----------------------------------------------------
@@ -576,24 +566,6 @@ elif st.session_state.page == "📖 Syllabus Tracker":
                 else:
                     st.info(f"No chapters completed yet for '{sub_name}'. Check off items above to generate your report and PDF.")
 
-        # Centered Menu Buttons & Copyright Footer
-        st.markdown("<br><hr style='border: 1px solid #ddd;'>", unsafe_allow_html=True)
-        c_space1, c_btn1, c_btn2, c_btn3, c_space2 = st.columns([1, 1, 1, 1, 1])
-        with c_btn1:
-            if st.button("🏠 Dashboard"):
-                st.session_state.page = "🏠 Dashboard & Focus Station"
-                st.rerun()
-        with c_btn2:
-            if st.button("📖 Syllabus Tracker"):
-                st.session_state.page = "📖 Syllabus Tracker"
-                st.rerun()
-        with c_btn3:
-            if st.button("📄 PDF Tool"):
-                st.session_state.page = "📄 PDF Tool"
-                st.rerun()
-        
-        st.markdown("<p style='text-align: center; color: gray; font-size: 0.85rem; margin-top: 15px;'>copyright@muhit'sportal</p>", unsafe_allow_html=True)
-
 # ----------------------------------------------------
 # PAGE 3: PDF TOOL (2-in-1 Auto-Layout Tool)
 # ----------------------------------------------------
@@ -606,14 +578,12 @@ elif st.session_state.page == "📄 PDF Tool":
         st.write("---")
         st.write("ফাইল আপলোড করুন; ল্যান্ডস্কেপ স্লাইডগুলো কোনো বর্ডার বা কাটিং ছাড়াই ১টি পেজে ৩টি করে নিখুঁতভাবে বসে যাবে।")
 
-        # পিডিএফ ফাইল আপলোডার
         uploaded_files = st.file_uploader("আপনার পিডিএফ ফাইলগুলো এখানে সিলেক্ট করুন", type=["pdf"], accept_multiple_files=True, key="pdf_tool_uploader")
 
         if uploaded_files:
             if st.button("🔄 প্রসেসিং শুরু করুন", key="pdf_process_btn"):
                 with st.spinner("কাজ চলছে... নিখুঁত রেশিওতে লেআউট তৈরি হচ্ছে..."):
                     try:
-                        # ১. প্রথমে ফাইলগুলো মার্জ করা
                         merged_writer = PdfWriter()
                         for uploaded_file in uploaded_files:
                             reader = PdfReader(uploaded_file)
@@ -624,7 +594,6 @@ elif st.session_state.page == "📄 PDF Tool":
                         with open(temp_merged, "wb") as f:
                             merged_writer.write(f)
                         
-                        # ২. স্লাইডের আসল রেশিও অনুযায়ী ফুল-স্ক্রিন লেআউট তৈরি
                         output_pdf = "processed_output.pdf"
                         final_writer = PdfWriter()
                         reader = PdfReader(temp_merged)
@@ -640,7 +609,6 @@ elif st.session_state.page == "📄 PDF Tool":
                             
                             new_page = final_writer.add_blank_page(width=new_w, height=new_h)
                             
-                            # ৩টি স্লাইড ওপর-নিচে নিখুঁতভাবে বসানো
                             for j in range(3):
                                 if i + j < total_pages:
                                     current_slide = reader.pages[i + j]
@@ -650,7 +618,6 @@ elif st.session_state.page == "📄 PDF Tool":
                         with open(output_pdf, "wb") as f:
                             final_writer.write(f)
                         
-                        # টেম্পোরারি ফাইল রিমুভ করা
                         if os.path.exists(temp_merged):
                             os.remove(temp_merged)
                             
@@ -666,20 +633,71 @@ elif st.session_state.page == "📄 PDF Tool":
                     except Exception as e:
                         st.error(f"দুঃখিত, একটি সমস্যা হয়েছে: {e}")
 
-        # Centered Menu Buttons & Copyright Footer
-        st.markdown("<br><hr style='border: 1px solid #ddd;'>", unsafe_allow_html=True)
-        c_space1, c_btn1, c_btn2, c_btn3, c_space2 = st.columns([1, 1, 1, 1, 1])
-        with c_btn1:
-            if st.button("🏠 Dashboard"):
-                st.session_state.page = "🏠 Dashboard & Focus Station"
-                st.rerun()
-        with c_btn2:
-            if st.button("📖 Syllabus Tracker"):
-                st.session_state.page = "📖 Syllabus Tracker"
-                st.rerun()
-        with c_btn3:
-            if st.button("📄 PDF Tool"):
-                st.session_state.page = "📄 PDF Tool"
-                st.rerun()
+# ----------------------------------------------------
+# PAGE 4: ENGINEERING CHEMISTRY
+# ----------------------------------------------------
+elif st.session_state.page == "🧪 Engineering Chemistry":
+    if st.session_state.is_focus_running:
+        st.error("⚠️ Focus session is currently active! Complete your session first.")
+    else:
+        st.title("🧪 Engineering Chemistry")
+        chem_url = "https://bondipathshala.education/bn/course-resource/saikt-bhaaiyyaar-inyjiniyyaarin-kemisttri/Course1757417481300"
+        st.markdown(f"**Direct Link:** [Click here to open Engineering Chemistry Course]({chem_url})")
+        st.write("নিচে সরাসরি পেজটি লোড করা হলো (যদি ব্রাউজার পলিসির কারণে লোড না হয়, তবে উপরের লিংকে ক্লিক করে সরাসরি চলে যেতে পারো):")
         
-        st.markdown("<p style='text-align: center; color: gray; font-size: 0.85rem; margin-top: 15px;'>copyright@muhit'sportal</p>", unsafe_allow_html=True)
+        # Display website inside an iframe component if supported
+        st.components.v1.iframe(chem_url, height=700, scrolling=True)
+
+# ----------------------------------------------------
+# PAGE 5: GANER JOGOT
+# ----------------------------------------------------
+elif st.session_state.page == "🎵 গানের জগত":
+    if st.session_state.is_focus_running:
+        st.error("⚠️ Focus session is currently active! Complete your session first.")
+    else:
+        st.title("🎵 গানের জগত")
+        st.info("ইউটিউব ছাড় ছাড়াই অ্যাপের ভেতরে গান বা প্লেলিস্ট উপভোগ করো:")
+        playlist_url = "https://youtube.com/playlist?list=PLHODjXdsL83Y&si=tL76yOW0HJr_m42k"
+        st.video(playlist_url)
+
+# ----------------------------------------------------
+# PAGE 6: MON KHARAPER DINE
+# ----------------------------------------------------
+elif st.session_state.page == "🌿 মন খারাপের দিনে":
+    if st.session_state.is_focus_running:
+        st.error("⚠️ Focus session is currently active! Complete your session first.")
+    else:
+        st.title("🌿 মন খারাপের দিনে")
+        st.write("মন ভালো করার কিছু সুন্দর মুহূর্ত ও ছবি:")
+        
+        # 5 Relaxing/Beautiful Image URLs
+        images = [
+            "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800", # Sea/Beach
+            "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800", # Nature/Forest
+            "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=800", # Mountains/Night sky
+            "https://images.unsplash.com/photo-1426604966848-d7adac902bff?w=800", # Landscape
+            "https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=800"  # Green trees
+        ]
+        
+        for idx, img_url in enumerate(images, 1):
+            st.image(img_url, caption=f"রিলাক্সিং ভিউ #{idx}", use_container_width=True)
+            st.markdown("---")
+
+# Footer & Navigation buttons for main pages
+if st.session_state.page in ["🏠 Dashboard & Focus Station", "📖 Syllabus Tracker", "📄 PDF Tool"]:
+    st.markdown("<br><hr style='border: 1px solid #ddd;'>", unsafe_allow_html=True)
+    c_space1, c_btn1, c_btn2, c_btn3, c_space2 = st.columns([1, 1, 1, 1, 1])
+    with c_btn1:
+        if st.button("🏠 Dashboard"):
+            st.session_state.page = "🏠 Dashboard & Focus Station"
+            st.rerun()
+    with c_btn2:
+        if st.button("📖 Syllabus Tracker"):
+            st.session_state.page = "📖 Syllabus Tracker"
+            st.rerun()
+    with c_btn3:
+        if st.button("📄 PDF Tool"):
+            st.session_state.page = "📄 PDF Tool"
+            st.rerun()
+    
+    st.markdown("<p style='text-align: center; color: gray; font-size: 0.85rem; margin-top: 15px;'>copyright@muhit'sportal</p>", unsafe_allow_html=True)
