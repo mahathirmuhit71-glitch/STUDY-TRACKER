@@ -1,3 +1,4 @@
+import streamlit as str_module
 import streamlit as st
 import pandas as pd
 import json
@@ -25,6 +26,13 @@ DATA_DIR = "tracker_data"
 if not os.path.exists(DATA_DIR):
     os.makedirs(DATA_DIR)
 
+TASKS_FILE = os.path.join(DATA_DIR, "tasks.json")
+SYLLABUS_FILE = os.path.join(DATA_DIR, "syllabus.json")
+TIMER_FILE = os.path.join(DATA_DIR, "timer_logs.json")
+DAILY_SESSIONS_FILE = os.path.join(DATA_DIR, "daily_sessions.json")
+EXAMS_FILE = os.path.join(DATA_DIR, "admission_exams.json")
+SONGS_FILE = os.path.join(DATA_DIR, "songs.json")
+
 def load_data(file_path, default_val):
     if os.path.exists(file_path):
         try:
@@ -38,36 +46,10 @@ def save_data(file_path, data):
     with open(file_path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
-# --- ফাইল পাথ সেটআপ ---
-TASKS_FILE = os.path.join(DATA_DIR, "tasks.json")
-SYLLABUS_FILE = os.path.join(DATA_DIR, "syllabus.json")
-TIMER_FILE = os.path.join(DATA_DIR, "timer_logs.json")
-DAILY_SESSIONS_FILE = os.path.join(DATA_DIR, "daily_sessions.json")
-EXAMS_FILE = os.path.join(DATA_DIR, "admission_exams.json")
-SONGS_FILE = os.path.join(DATA_DIR, "songs.json")
-
 # Initialize Session States & Database Setup
 st.session_state.tasks = load_data(TASKS_FILE, [])
 st.session_state.daily_sessions = load_data(DAILY_SESSIONS_FILE, {})
-
-DEFAULT_ADMISSION_EXAMS = [
-    {"id": "1", "University Name": "Du", "Exam date": "12 December, 2026", "1st date": "11 November, 2026", "Last Date": "25 November, 2026"},
-    {"id": "2", "University Name": "KUET", "Exam date": "07 January, 2027", "1st date": "05 September, 2026", "Last Date": "05 September, 2026"},
-    {"id": "3", "University Name": "SUST", "Exam date": "26 January, 2027", "1st date": "05 September, 2026", "Last Date": "05 September, 2026"},
-    {"id": "4", "University Name": "MIST", "Exam date": "18 December, 2026", "1st date": "05 September, 2026", "Last Date": "05 September, 2026"},
-    {"id": "5", "University Name": "KU", "Exam date": "18 December, 2026", "1st date": "05 September, 2026", "Last Date": "05 September, 2026"},
-    {"id": "6", "University Name": "Jagonnath", "Exam date": "01 January, 2027", "1st date": "15 November, 2026", "Last Date": "10 September, 2026"},
-    {"id": "7", "University Name": "Chattogram Uni", "Exam date": "30 January, 2027", "1st date": "15 November, 2026", "Last Date": "10 December, 2026"},
-    {"id": "8", "University Name": "RAJSHAHI", "Exam date": "09 January, 2027", "1st date": "12 November, 2026", "Last Date": "27 November, 2026"},
-    {"id": "9", "University Name": "BUP", "Exam date": "08 January, 2026", "1st date": "05 September, 2026", "Last Date": "05 September, 2026"}
-]
-
-loaded_exams = load_data(EXAMS_FILE, [])
-if not loaded_exams:
-    st.session_state.admission_exams = DEFAULT_ADMISSION_EXAMS
-    save_data(EXAMS_FILE, DEFAULT_ADMISSION_EXAMS)
-else:
-    st.session_state.admission_exams = loaded_exams
+st.session_state.admission_exams = load_data(EXAMS_FILE, [])
 
 DEFAULT_SONGS = [
     "https://youtu.be/B-ISCaZ2EUw?si=LHSLxrwL8gqv48SE",
@@ -78,10 +60,12 @@ DEFAULT_SONGS = [
 ]
 st.session_state.my_songs = load_data(SONGS_FILE, DEFAULT_SONGS)
 
+# Checklist Columns Definition for Different Subjects
 CHECKBOX_COLUMNS = ["Class", "Master Book", "Concept Book", "Short Note", "Book Reading", "VAP Master Bank"]
 BIOLOGY_COLUMNS = ["Class", "Master Book", "Book Reading"]
 MATH_COLUMNS = ["Class", "Master Book", "Concept Book", "Short Note", "VAP Master Bank"]
 
+# User Defined Ordered HSC Syllabus
 HSC_DEFAULT_SYLLABUS = {
     "Physics (1st & 2nd Paper)": {
         "Chapters": {
@@ -186,6 +170,7 @@ if "is_focus_running" not in st.session_state:
 
 DAYS_OF_WEEK = ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
 
+# Bangladesh Timezone (UTC +6)
 bd_tz = timezone(timedelta(hours=6))
 now_bd = datetime.now(bd_tz)
 
@@ -193,19 +178,19 @@ current_day_name = now_bd.strftime('%A')
 today_date_str = now_bd.strftime('%Y-%m-%d')
 formatted_display_date = now_bd.strftime('%d %B %Y')
 
+# Calculate Dynamic Countdown based on Target Date
 target_exam_date = datetime(2026, 12, 1, tzinfo=bd_tz)
 remaining_days = (target_exam_date - now_bd).days
 if remaining_days < 0:
     remaining_days = 0
 
-# --- Sidebar Navigation (সিলেবাস ট্র্যাকার এখন আলাদা মেনু হিসেবে যুক্ত) ---
-st.sidebar.title("⚡ Muhit's Workspace")
-st.sidebar.markdown("---")
+# Sidebar Navigation Control
+st.sidebar.title("⚡ Muhit's Portal")
 st.sidebar.markdown("**Navigation**")
 
 page_selection = [
     "🏠 Dashboard & Focus Station", 
-    "📖 Syllabus Tracker",
+    "📖 Syllabus Tracker", 
     "🎓 ভর্তি পরীক্ষার তারিখ",
     "📄 PDF Tool", 
     "🎵 গানের জগত"
@@ -232,38 +217,6 @@ sidebar_selection = st.sidebar.radio(
 
 if sidebar_selection != st.session_state.page and not st.session_state.is_focus_running:
     st.session_state.page = sidebar_selection
-
-# PDF Generator Helper for Daily Progress
-def generate_daily_pdf_report(date_str, day_name, completed_count, total_mins):
-    if not REPORTLAB_AVAILABLE:
-        return None
-    buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
-    styles = getSampleStyleSheet()
-    elements = []
-    
-    elements.append(Paragraph(f"Daily Study Progress Report", styles['Title']))
-    elements.append(Paragraph(f"Date: {date_str} ({day_name})", styles['Heading2']))
-    elements.append(Spacer(1, 12))
-    
-    data = [
-        ["Metric", "Value"],
-        ["Completed 90-min Sessions", f"{completed_count} / 10"],
-        ["Total Focus Time", f"{total_mins} minutes"]
-    ]
-    t = Table(data, colWidths=[200, 200])
-    t.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#4CAF50')),
-        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
-        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
-        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-        ('BOTTOMPADDING', (0,0), (-1,0), 8),
-        ('GRID', (0,0), (-1,-1), 1, colors.grey)
-    ]))
-    elements.append(t)
-    doc.build(elements)
-    buffer.seek(0)
-    return buffer
 
 # ----------------------------------------------------
 # PAGE 1: DASHBOARD & FOCUS STATION
@@ -294,7 +247,7 @@ if st.session_state.page == "🏠 Dashboard & Focus Station":
                             if t['id'] == task['id']:
                                 t['done'] = True
                         save_data(TASKS_FILE, st.session_state.tasks)
-                        st.toast("🎉 Great job! Task completed.")
+                        st.toast("🎉 Great job Muhit! Task completed.")
                         time.sleep(0.5)
                         st.rerun()
                 with d_col2:
@@ -304,7 +257,6 @@ if st.session_state.page == "🏠 Dashboard & Focus Station":
                         if st.button("🎯 Focus Now", key=f"f_now_{task['id']}"):
                             st.session_state.active_focus_task = task
                             st.session_state.is_focus_running = True
-                            st.session_state.focus_start_time = time.time()
                             st.rerun()
                     else:
                         st.write("🔒 Locked")
@@ -369,41 +321,42 @@ if st.session_state.page == "🏠 Dashboard & Focus Station":
                 st.rerun()
 
     with right_col:
-        st.markdown("### ⏱️ Focus Arena & Live Stopwatch")
-        if st.session_state.is_focus_running:
-            st.warning("🔒 Focus mode active! Stay focused, consistent, determined, and work hard. Switching tabs will be logged.")
+        st.markdown("### ⏱️ Focus Arena & Live Timer")
+        if st.session_state.active_focus_task:
+            active_task = st.session_state.active_focus_task
+            st.success(f"Focused Task: {active_task['title']}")
+            st.info("🔥 Fixed 25-Minute Focus Session in Progress. Stay locked in!")
             
-            timer_display = st.empty()
-            if "focus_start_time" not in st.session_state:
-                st.session_state.focus_start_time = time.time()
+            timer_visual = st.empty()
+            bar = st.progress(0)
+            total_seconds = 25 * 60
+            study_seconds = 0
             
-            while st.session_state.is_focus_running:
-                elapsed_seconds = int(time.time() - st.session_state.focus_start_time)
-                hours, rem = divmod(elapsed_seconds, 3600)
-                mins, secs = divmod(rem, 60)
-                timer_display.markdown(f"### ⏱️ Stopwatch: {hours:02d}:{mins:02d}:{secs:02d}", unsafe_allow_html=True)
+            for s in range(total_seconds):
                 time.sleep(1)
-                st.rerun()
+                study_seconds += 1
+                remaining = total_seconds - study_seconds
+                mins, secs = divmod(remaining, 60)
+                timer_visual.markdown(f"### ⏱️ {mins:02d}:{secs:02d}", unsafe_allow_html=True)
+                bar.progress(int((study_seconds / total_seconds) * 100))
+            
+            final_hrs = round(study_seconds / 3600, 2)
+            for t in st.session_state.tasks:
+                if t['id'] == active_task['id']:
+                    t['hours_done'] += final_hrs
+            save_data(TASKS_FILE, st.session_state.tasks)
+            st.session_state.timer_logs.append({
+                "date": formatted_display_date,
+                "task_title": active_task['title'],
+                "hours_focused": final_hrs
+            })
+            save_data(TIMER_FILE, st.session_state.timer_logs)
+            st.session_state.is_focus_running = False
+            st.session_state.active_focus_task = None
+            st.balloons()
+            st.rerun()
         else:
-            st.info("💡 Click 'Focus Now' next to any task in your Daily Planner to begin your open-ended focus stopwatch.")
-            if st.button("🛑 End Focus Session"):
-                if "focus_start_time" in st.session_state:
-                    elapsed = int(time.time() - st.session_state.focus_start_time)
-                    final_hrs = round(elapsed / 3600, 2)
-                    st.session_state.timer_logs.append({
-                        "date": formatted_display_date,
-                        "task_title": st.session_state.active_focus_task['title'] if st.session_state.active_focus_task else "General Focus",
-                        "hours_focused": final_hrs
-                    })
-                    save_data(TIMER_FILE, st.session_state.timer_logs)
-                    st.success(f"Session finished! Total time focused: {int(elapsed//60)} minutes.")
-                    del st.session_state.focus_start_time
-                st.session_state.is_focus_running = False
-                st.session_state.active_focus_task = None
-                st.rerun()
-
-        total_today_focus = sum(log['hours_focused'] for log in st.session_state.timer_logs if log['date'] == formatted_display_date)
-        st.markdown(f"#### 📊 আজ মোট ফোকাস ছিলাম: `{round(total_today_focus * 60, 1)} মিনিট`")
+            st.info("💡 Click 'Focus Now' next to any task in your Daily Planner to begin your 25-minute session instantly.")
 
         st.markdown("<hr style='border: 1px solid #ccc; margin: 20px 0;'>", unsafe_allow_html=True)
         st.markdown('<div id="target-tracker"></div>', unsafe_allow_html=True)
@@ -442,32 +395,74 @@ if st.session_state.page == "🏠 Dashboard & Focus Station":
         total_minutes_today = completed_count * 90
         st.markdown(f"💡 **আজকের মোট পড়া হয়েছে:** `{total_minutes_today} মিনিট`")
 
-        # --- DAILY TARGET PDF DOWNLOAD OPTION ---
-        st.markdown("---")
-        st.markdown("#### 📥 আজকের প্রোগ্রেস পিডিএফ ডাউনলোড করুন")
+        st.markdown("<hr style='border: 1px solid #ccc; margin: 20px 0;'>", unsafe_allow_html=True)
+
+        st.markdown("#### 📥 Study History PDF Report")
         if REPORTLAB_AVAILABLE:
-            pdf_buffer = generate_daily_pdf_report(formatted_display_date, current_day_name, completed_count, total_minutes_today)
-            if pdf_buffer:
-                st.download_button(
-                    label="📄 Download Daily Target PDF",
-                    data=pdf_buffer,
-                    file_name=f"Daily_Report_{today_date_str}.pdf",
-                    mime="application/pdf",
-                    key="download_daily_pdf"
-                )
+            def generate_history_pdf(sessions_data):
+                buffer = BytesIO()
+                doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
+                story = []
+                styles = getSampleStyleSheet()
+                
+                title_style = ParagraphStyle('TitleStyle', parent=styles['Heading1'], fontSize=16, textColor=colors.HexColor('#FF4B4B'), spaceAfter=15, alignment=1)
+                cell_style = ParagraphStyle('CellStyle', parent=styles['Normal'], fontSize=10, leading=14, textColor=colors.HexColor('#222222'))
+                header_style = ParagraphStyle('HeaderStyle', parent=styles['Normal'], fontSize=11, leading=14, fontName='Helvetica-Bold', textColor=colors.whitesmoke)
+                
+                story.append(Paragraph(f"Daily Study History Report - Muhit", title_style))
+                story.append(Spacer(1, 10))
+                
+                table_content = [[Paragraph("Date", header_style), Paragraph("Day", header_style), Paragraph("Completed 90m Sessions", header_style), Paragraph("Total Minutes", header_style)]]
+                
+                for d_str, d_info in sorted(sessions_data.items(), reverse=True):
+                    comp_s = sum(1 for v in d_info.get("sessions", {}).values() if v)
+                    t_mins = comp_s * 90
+                    
+                    d_para = Paragraph(str(d_info.get("display_date", d_str)), cell_style)
+                    day_para = Paragraph(str(d_info.get("day_name", "")), cell_style)
+                    s_para = Paragraph(f"{comp_s} Sessions", cell_style)
+                    m_para = Paragraph(f"{t_mins} mins", cell_style)
+                    table_content.append([d_para, day_para, s_para, m_para])
+                    
+                pdf_table = Table(table_content, colWidths=[130, 110, 150, 110])
+                pdf_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2E2E2E')),
+                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+                    ('TOPPADDING', (0, 0), (-1, 0), 8),
+                    ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#F9F9F9')),
+                    ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CCCCCC')),
+                    ('TOPPADDING', (0, 1), (-1, -1), 6),
+                    ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+                ]))
+                story.append(pdf_table)
+                doc.build(story)
+                buffer.seek(0)
+                return buffer.getvalue()
+
+            hist_pdf_bytes = generate_history_pdf(st.session_state.daily_sessions)
+            st.download_button(
+                label="📥 Download Study History PDF",
+                data=hist_pdf_bytes,
+                file_name="study_history_report_muhit.pdf",
+                mime="application/pdf",
+                key="dl_history_pdf"
+            )
         else:
-            st.warning("ReportLab package not available for generating PDF.")
+            st.warning("ReportLab library is not installed.")
 
 # ----------------------------------------------------
-# PAGE 2: SYLLABUS TRACKER (SEPARATE MENU PAGE)
+# PAGE 2: SYLLABUS TRACKER
 # ----------------------------------------------------
 elif st.session_state.page == "📖 Syllabus Tracker":
     if st.session_state.is_focus_running:
-        st.error("⚠️ Focus session is currently active! Complete your session first.")
+        st.error("⚠️ Focus session is currently active! Be Consistent and Determined! Complete your session first.")
     else:
-        st.title("📖 Syllabus Tracker")
-        st.info("⚡ Track your chapter progress across subjects below.")
+        st.title("📖 Subject & Chapter Syllabus Tracker")
+        st.info("⚡ Track your chapter progress below and generate custom subject-wise PDF performance reports instantly.")
         st.write("---")
+        st.subheader("📚 Chapter Progress Checklist")
         
         for sub, content in st.session_state.syllabus.items():
             with st.expander(f"📘 {sub}", expanded=False):
@@ -488,6 +483,95 @@ elif st.session_state.page == "📖 Syllabus Tracker":
                 else:
                     st.info("No chapters mapped.")
 
+        st.write("---")
+        st.subheader("📊 Subject Progress & PDF Reports")
+        
+        subject_names = list(st.session_state.syllabus.keys())
+        tabs = st.tabs([f"📘 {s.split(' ')[0]}" for s in subject_names])
+        
+        for idx, sub_name in enumerate(subject_names):
+            with tabs[idx]:
+                st.markdown(f"#### 📑 {sub_name} Progress Report")
+                content = st.session_state.syllabus[sub_name]
+                chapters = content.get("Chapters", {})
+                target_cols = get_subject_cols(sub_name)
+                total_pillars = len(target_cols)
+                
+                sub_report_data = []
+                for ch, parts in chapters.items():
+                    completed_pillars = [col for col in target_cols if parts.get(col, False)]
+                    if completed_pillars:
+                        done_count = len(completed_pillars)
+                        percentage = int((done_count / total_pillars) * 100)
+                        sub_report_data.append({
+                            "Chapter Name": ch,
+                            "Completed Progress Metrics": ", ".join(completed_pillars),
+                            "Progress (%)": f"{percentage}%"
+                        })
+                        
+                if sub_report_data:
+                    df_sub = pd.DataFrame(sub_report_data)
+                    st.dataframe(df_sub, use_container_width=True)
+                    
+                    if REPORTLAB_AVAILABLE:
+                        def generate_subject_pdf(subject_title, dataframe):
+                            buffer = BytesIO()
+                            doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
+                            story = []
+                            styles = getSampleStyleSheet()
+                            
+                            title_style = ParagraphStyle('TitleStyle', parent=styles['Heading1'], fontSize=16, textColor=colors.HexColor('#FF4B4B'), spaceAfter=15, alignment=1)
+                            cell_style = ParagraphStyle('CellStyle', parent=styles['Normal'], fontSize=9, leading=13, textColor=colors.HexColor('#222222'))
+                            header_style = ParagraphStyle('HeaderStyle', parent=styles['Normal'], fontSize=10, leading=13, fontName='Helvetica-Bold', textColor=colors.whitesmoke)
+                            
+                            story.append(Paragraph(f"Progress Report: {subject_title} (Muhit)", title_style))
+                            story.append(Spacer(1, 10))
+                            
+                            table_content = [[Paragraph("Chapter Name", header_style), Paragraph("Completed Progress Metrics", header_style), Paragraph("Progress (%)", header_style)]]
+                            for _, row in dataframe.iterrows():
+                                raw_ch = str(row['Chapter Name'])
+                                parts_list = raw_ch.split(':')
+                                if len(parts_list) >= 2:
+                                    clean_ch = f"{parts_list[0].strip()}: {parts_list[1].strip()}"
+                                else:
+                                    clean_ch = "".join([c if ord(c) < 128 else "" for c in raw_ch]).strip()
+                                    
+                                c_para = Paragraph(clean_ch, cell_style)
+                                m_para = Paragraph(str(row['Completed Progress Metrics']), cell_style)
+                                p_para = Paragraph(str(row['Progress (%)']), cell_style)
+                                table_content.append([c_para, m_para, p_para])
+                                
+                            pdf_table = Table(table_content, colWidths=[200, 240, 100])
+                            pdf_table.setStyle(TableStyle([
+                                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2E2E2E')),
+                                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                                ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+                                ('TOPPADDING', (0, 0), (-1, 0), 8),
+                                ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#F9F9F9')),
+                                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CCCCCC')),
+                                ('TOPPADDING', (0, 1), (-1, -1), 6),
+                                ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+                            ]))
+                            story.append(pdf_table)
+                            doc.build(story)
+                            buffer.seek(0)
+                            return buffer.getvalue()
+                            
+                        pdf_bytes = generate_subject_pdf(sub_name, df_sub)
+                        file_safe_name = sub_name.split(' ')[0].lower()
+                        st.download_button(
+                            label=f"📥 Download {sub_name.split(' ')[0]} PDF Report",
+                            data=pdf_bytes,
+                            file_name=f"{file_safe_name}_progress_report_muhit.pdf",
+                            mime="application/pdf",
+                            key=f"dl_pdf_{sub_name}"
+                        )
+                    else:
+                        st.warning("ReportLab library is not installed, PDF generation is disabled.")
+                else:
+                    st.info(f"No chapters completed yet for '{sub_name}'. Check off items above to generate your report and PDF.")
+
 # ----------------------------------------------------
 # PAGE 3: ADMISSION EXAM DATES TRACKER
 # ----------------------------------------------------
@@ -498,55 +582,91 @@ elif st.session_state.page == "🎓 ভর্তি পরীক্ষার ত
         st.title("🎓 ভর্তি পরীক্ষার তারিখ ও শিডিউল")
         st.write("---")
 
+        # 1. Show existing exam list first (in 4 columns view style)
         st.markdown("#### 📋 সংরক্ষিত ভর্তি পরীক্ষার তালিকা")
 
         if not st.session_state.admission_exams:
             st.info("এখনো কোনো বিশ্ববিদ্যালয়ের তথ্য যোগ করা হয়নি। নিচে ফর্ম থেকে তথ্য যুক্ত করুন।")
         else:
-            header_c1, header_c2, header_c3, header_c4 = st.columns([1.5, 1.2, 1.5, 1.8])
-            header_c1.markdown("**University Name**")
-            header_c2.markdown("**Countdown**")
-            header_c3.markdown("**Exam Date**")
-            header_c4.markdown("**Application Window**")
-            st.markdown("---")
-
-            bd_today = now_bd.date()
             for ex in st.session_state.admission_exams:
-                e_c1, e_c2, e_c3, e_c4 = st.columns([1.5, 1.2, 1.5, 1.8])
-                
-                try:
-                    parsed_exam_date = datetime.strptime(ex['Exam date'], "%d %B, %Y").date()
-                    days_left = (parsed_exam_date - bd_today).days
-                    countdown_text = f"{days_left} days left" if days_left >= 0 else "Exam Passed"
-                except:
-                    countdown_text = "N/A"
-
+                e_c1, e_c2, e_c3, e_c4, e_c5 = st.columns([2, 1.5, 1.5, 1.5, 0.6])
                 with e_c1:
                     st.markdown(f"🏛️ **{ex['University Name']}**")
                 with e_c2:
-                    st.markdown(f"⏳ `{countdown_text}`")
+                    st.caption(f"📝 Exam: {ex['Exam date']}")
                 with e_c3:
-                    st.markdown(f"📝 {ex['Exam date']}")
+                    st.caption(f"🚀 Start: {ex['1st date']}")
                 with e_c4:
-                    st.markdown(f"🚀 {ex['1st date']} <br>to<br> 🛑 {ex['Last Date']}", unsafe_allow_html=True)
-                
-                if st.button("🗑️ Delete", key=f"del_ex_{ex['id']}"):
-                    st.session_state.admission_exams = [item for item in st.session_state.admission_exams if item['id'] != ex['id']]
-                    save_data(EXAMS_FILE, st.session_state.admission_exams)
-                    st.rerun()
-                st.markdown("<div style='margin: 5px 0; border-bottom: 1px dashed #eee;'></div>", unsafe_allow_html=True)
+                    st.caption(f"⏳ Last: {ex['Last Date']}")
+                with e_c5:
+                    if st.button("🗑️", key=f"del_ex_{ex['id']}", help="ডিলিট করুন"):
+                        st.session_state.admission_exams = [item for item in st.session_state.admission_exams if item['id'] != ex['id']]
+                        save_data(EXAMS_FILE, st.session_state.admission_exams)
+                        st.rerun()
+                st.markdown("<div style='margin: -5px 0;'></div>", unsafe_allow_html=True)
+
+            st.write("")
+            # 2. PDF Download Button for saved admission schedule
+            if REPORTLAB_AVAILABLE:
+                def generate_admission_pdf(exams_list):
+                    buffer = BytesIO()
+                    doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
+                    story = []
+                    styles = getSampleStyleSheet()
+                    
+                    title_style = ParagraphStyle('TitleStyle', parent=styles['Heading1'], fontSize=16, textColor=colors.HexColor('#FF4B4B'), spaceAfter=15, alignment=1)
+                    cell_style = ParagraphStyle('CellStyle', parent=styles['Normal'], fontSize=9, leading=13, textColor=colors.HexColor('#222222'))
+                    header_style = ParagraphStyle('HeaderStyle', parent=styles['Normal'], fontSize=10, leading=13, fontName='Helvetica-Bold', textColor=colors.whitesmoke)
+                    
+                    story.append(Paragraph("Admission Exam Schedule Report - Muhit", title_style))
+                    story.append(Spacer(1, 10))
+                    
+                    table_content = [[Paragraph("University Name", header_style), Paragraph("Exam Date", header_style), Paragraph("1st Date (Start)", header_style), Paragraph("Last Date (Deadline)", header_style)]]
+                    for ex in exams_list:
+                        u_para = Paragraph(str(ex['University Name']), cell_style)
+                        e_para = Paragraph(str(ex['Exam date']), cell_style)
+                        f_para = Paragraph(str(ex['1st date']), cell_style)
+                        l_para = Paragraph(str(ex['Last Date']), cell_style)
+                        table_content.append([u_para, e_para, f_para, l_para])
+                        
+                    pdf_table = Table(table_content, colWidths=[150, 110, 120, 120])
+                    pdf_table.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2E2E2E')),
+                        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+                        ('TOPPADDING', (0, 0), (-1, 0), 8),
+                        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#F9F9F9')),
+                        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CCCCCC')),
+                        ('TOPPADDING', (0, 1), (-1, -1), 6),
+                        ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+                    ]))
+                    story.append(pdf_table)
+                    doc.build(story)
+                    buffer.seek(0)
+                    return buffer.getvalue()
+
+                admission_pdf_bytes = generate_admission_pdf(st.session_state.admission_exams)
+                st.download_button(
+                    label="📥 Download Admission Schedule PDF",
+                    data=admission_pdf_bytes,
+                    file_name="admission_schedule_muhit.pdf",
+                    mime="application/pdf",
+                    key="dl_admission_pdf"
+                )
 
         st.write("---")
-        st.markdown("### ➕ নতুন ভর্তি পরীক্ষার তথ্য যোগ করুন (নিচের ফর্ম)")
 
+        # 3. Add New Exam Form at the very end
         with st.form("admission_exam_form", clear_on_submit=True):
+            st.markdown("#### ➕ নতুন ভর্তি পরীক্ষার তথ্য যোগ করুন")
             f_col1, f_col2 = st.columns(2)
             with f_col1:
                 uni_name_input = st.text_input("University Name (যেমন: Dhaka University / BUET)")
                 exam_date_input = st.date_input("Exam Date", value=now_bd.date(), min_value=datetime(2026, 1, 1).date(), max_value=datetime(2027, 12, 31).date())
             with f_col2:
-                first_date_input = st.date_input("Application Start Date (1st Date)", value=now_bd.date(), min_value=datetime(2026, 1, 1).date(), max_value=datetime(2027, 12, 31).date())
-                last_date_input = st.date_input("Application End Date (Last Date)", value=now_bd.date(), min_value=datetime(2026, 1, 1).date(), max_value=datetime(2027, 12, 31).date())
+                first_date_input = st.date_input("1st Date (Application Start)", value=now_bd.date(), min_value=datetime(2026, 1, 1).date(), max_value=datetime(2027, 12, 31).date())
+                last_date_input = st.date_input("Last Date (Application Deadline)", value=now_bd.date(), min_value=datetime(2026, 1, 1).date(), max_value=datetime(2027, 12, 31).date())
             
             submit_exam = st.form_submit_button("💾 সেভ করুন")
             if submit_exam:
@@ -566,13 +686,13 @@ elif st.session_state.page == "🎓 ভর্তি পরীক্ষার ত
                     st.warning("দয়া করে অন্তত University Name লিখুন।")
 
 # ----------------------------------------------------
-# PAGE 4: PDF TOOL
+# PAGE 4: PDF TOOL (2-in-1 Auto-Layout Tool)
 # ----------------------------------------------------
 elif st.session_state.page == "📄 PDF Tool":
     if st.session_state.is_focus_running:
         st.error("⚠️ Focus session is currently active! Be Consistent and Determined! Complete your session first.")
     else:
-        st.markdown("<h2 style='text-align: center; color: #4CAF50;'>👨‍💻 Personal Workspace</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align: center; color: #4CAF50;'>👨‍💻 Mahathir Muhit Personal Workspace</h2>", unsafe_allow_html=True)
         st.markdown("<h3 style='text-align: center; color: #888888;'>🤖 ২-ইন-১ পিডিএফ অটো-লেআউট টুল (নিখুঁত রেশিও)</h3>", unsafe_allow_html=True)
         st.write("---")
         st.write("ফাইল আপলোড করুন; ল্যান্ডস্কেপ স্লাইডগুলো কোনো বর্ডার বা কাটিং ছাড়াই ১টি পেজে ৩টি করে নিখুঁতভাবে বসে যাবে।")
@@ -620,7 +740,7 @@ elif st.session_state.page == "📄 PDF Tool":
                         if os.path.exists(temp_merged):
                             os.remove(temp_merged)
                             
-                        st.success("🎉 আপনার নিখুঁত ফুল-স্ক্রিন ফাইলটি তৈরি হয়েছে!")
+                        st.success("🎉 মাহাথির, আপনার নিখুঁত ফুল-স্ক্রিন ফাইলটি তৈরি হয়েছে!")
                         with open(output_pdf, "rb") as f:
                             st.download_button(
                                 label="📥 প্রসেসড পিডিএফ ডাউনলোড করুন",
@@ -643,6 +763,7 @@ elif st.session_state.page == "🎵 গানের জগত":
         st.info("তোমার পছন্দের গানগুলো নিচে সরাসরি প্লেয়ারে শুনতে পারো:")
         st.write("---")
         
+        # Display existing songs with delete options
         for idx, song_url in enumerate(st.session_state.my_songs, 1):
             sc1, sc2 = st.columns([5, 1])
             with sc1:
@@ -660,6 +781,7 @@ elif st.session_state.page == "🎵 গানের জগত":
                     st.rerun()
             st.markdown("---")
 
+        # Add new song form at the very end
         st.markdown("#### ➕ নতুন গান যোগ করুন")
         with st.form("add_song_form", clear_on_submit=True):
             new_song_link = st.text_input("YouTube Song Link (যেমন: https://youtu.be/...)")
@@ -673,17 +795,17 @@ elif st.session_state.page == "🎵 গানের জগত":
                 else:
                     st.warning("দয়া করে একটি সঠিক ইউটিউব লিংক দিন।")
 
-# --- FOOTER & COPYRIGHT ON ALL PAGES ---
-st.markdown("<br><hr style='border: 1px solid #ddd;'>", unsafe_allow_html=True)
-
-mc1, mc2, mc3, mc4, mc5 = st.columns([1, 1, 1, 1, 1])
-with mc2:
-    if st.button("🏠 Dashboard"):
-        st.session_state.page = "🏠 Dashboard & Focus Station"
-        st.rerun()
-with mc4:
-    if st.button("📖 Syllabus Tracker"):
-        st.session_state.page = "📖 Syllabus Tracker"
-        st.rerun()
-        
-st.markdown("<p style='text-align: center; color: gray; font-size: 0.85rem; margin-top: 15px;'>@ copyright@muhit'sportal</p>", unsafe_allow_html=True)
+# Footer & Navigation buttons for main pages
+if st.session_state.page in ["🏠 Dashboard & Focus Station", "📖 Syllabus Tracker", "🎓 ভর্তি পরীক্ষার তারিখ", "📄 PDF Tool"]:
+    st.markdown("<br><hr style='border: 1px solid #ddd;'>", unsafe_allow_html=True)
+    c_space1, c_btn1, c_btn2, c_space2 = st.columns([1, 1, 1, 1])
+    with c_btn1:
+        if st.button("🏠 Dashboard"):
+            st.session_state.page = "🏠 Dashboard & Focus Station"
+            st.rerun()
+    with c_btn2:
+        if st.button("📖 Syllabus Tracker"):
+            st.session_state.page = "📖 Syllabus Tracker"
+            st.rerun()
+    
+    st.markdown("<p style='text-align: center; color: gray; font-size: 0.85rem; margin-top: 15px;'>copyright@muhit'sportal</p>", unsafe_allow_html=True)
