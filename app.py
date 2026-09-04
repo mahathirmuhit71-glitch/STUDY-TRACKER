@@ -180,7 +180,14 @@ page = st.sidebar.radio("Navigation", page_selection, on_change=handle_nav_chang
 # PAGE 1: DASHBOARD & FOCUS STATION
 # ----------------------------------------------------
 if page == "🏠 Dashboard & Focus Station":
-    st.title("⚡ Muhit's Command Center")
+    # Custom HTML Title with hidden clickable emoji link redirecting to tracker
+    st.markdown("""
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+            <a href="#target-tracker" style="text-decoration: none; font-size: 32px; line-height: 1; cursor: pointer;" title="">⚡</a>
+            <h1 style="margin: 0; font-size: 2.25rem; font-weight: 700; color: #FFFFFF;">Muhit's Command Center</h1>
+        </div>
+    """, unsafe_allow_html=True)
+
     left_col, right_col = st.columns([1.8, 1.4])
     
     with left_col:
@@ -295,6 +302,9 @@ if page == "🏠 Dashboard & Focus Station":
             st.info("💡 Click 'Focus Now' next to any task in your Daily Planner to begin your 25-minute session instantly.")
 
         st.markdown("<hr style='border: 1px solid #ccc; margin: 20px 0;'>", unsafe_allow_html=True)
+
+        # Hidden HTML Anchor target for the emoji link
+        st.markdown('<div id="target-tracker"></div>', unsafe_allow_html=True)
 
         st.markdown(f"### 🎯 Daily Sessions (90-Minute Target Tracker)")
         st.markdown(f"**Day:** {current_day_name} | **Date:** {formatted_display_date}")
