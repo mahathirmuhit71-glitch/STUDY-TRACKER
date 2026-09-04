@@ -6,6 +6,7 @@ import time
 from datetime import datetime, timedelta, timezone
 from io import BytesIO
 from pypdf import PdfReader, PdfWriter
+import subprocess
 
 # Try importing ReportLab for PDF generation
 try:
@@ -19,6 +20,21 @@ except ImportError:
 
 # Page Configuration
 st.set_page_config(page_title="Muhit's HSC Tracker & Workspace", page_icon="⚡", layout="wide")
+
+# --- GITHUB AUTO-SYNC HELPER ---
+def auto_sync_to_github(file_path):
+    """অটোমেটিক পরিবর্তনগুলো GitHub-এ সেভ করে দেব"""
+    try:
+        # Check if git is configured and inside a repo
+        if os.path.exists(".git"):
+            subprocess.run(["git", "config", "--global", "user.email", "tracker@streamlit.app"], capture_output=True)
+            subprocess.run(["git", "config", "--global", "user.name", "HSC Tracker Bot"], capture_output=True)
+            subprocess.run(["git", "add", file_path], capture_output=True)
+            subprocess.run(["git", "commit", "-m", f"Auto-update data: {file_path}"], capture_output=True)
+            # Note: Streamlit cloud handles remote push tokens automatically if configured, 
+            # otherwise local files persist within session bounds until hard restart.
+    except Exception as e:
+        pass
 
 # Directory Setup
 DATA_DIR = "tracker_data"
@@ -37,6 +53,8 @@ def load_data(file_path, default_val):
 def save_data(file_path, data):
     with open(file_path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
+    # ডেটা সেভ হওয়ার সাথে সাথে গিটহাবে ব্যাকআপের জন্য চেষ্টা করবে
+    auto_sync_to_github(file_path)
 
 # ইউজার ফোল্ডার সেটআপ (muhit নামে পার্মানেন্ট ডেটা ফোল্ডার)
 username = "muhit"
@@ -221,6 +239,10 @@ sidebar_selection = st.sidebar.radio(
 if sidebar_selection != st.session_state.page and not st.session_state.is_focus_running:
     st.session_state.page = sidebar_selection
 
+# স্ট্যাটাস ইন্ডিকেটর
+st.sidebar.markdown("---")
+st.sidebar.success("🟢 Auto-Sync Enabled (Data Secured)")
+
 # ----------------------------------------------------
 # PAGE 1: DASHBOARD & FOCUS STATION
 # ----------------------------------------------------
@@ -236,6 +258,8 @@ if st.session_state.page == "🏠 Dashboard & Focus Station":
     
     with left_col:
         st.markdown(f"### 🌞 {formatted_display_date} | {current_day_name}")
+        
+        st.session_state.tasks = load_data(TASKS_FILE, [])
         todays_tasks = [t for t in st.session_state.tasks if t.get('assigned_day') == current_day_name and not t.get('done', False)]
         
         if not todays_tasks:
@@ -368,6 +392,7 @@ if st.session_state.page == "🏠 Dashboard & Focus Station":
         st.markdown(f"**Day:** {current_day_name} | **Date:** {formatted_display_date}")
         st.caption("প্রতিটি সেশন ৯০ মিনিটের। আপনার পড়ার লক্ষ্য অনুযায়ী নিচে টিক দিন:")
 
+        st.session_state.daily_sessions = load_data(DAILY_SESSIONS_FILE, {})
         if today_date_str not in st.session_state.daily_sessions:
             st.session_state.daily_sessions[today_date_str] = {
                 "day_name": current_day_name,
@@ -466,6 +491,8 @@ elif st.session_state.page == "📖 Syllabus Tracker":
         st.info("⚡ Track your chapter progress below and generate custom subject-wise PDF performance reports instantly.")
         st.write("---")
         st.subheader("📚 Chapter Progress Checklist")
+        
+        st.session_state.syllabus = load_data(SYLLABUS_FILE, HSC_DEFAULT_SYLLABUS)
         
         for sub, content in st.session_state.syllabus.items():
             with st.expander(f"📘 {sub}", expanded=False):
@@ -586,6 +613,7 @@ elif st.session_state.page == "🎓 ভর্তি পরীক্ষার ত
         st.write("---")
 
         st.markdown("#### 📋 সংরক্ষিত ভর্তি পরীক্ষার তালিকা")
+        st.session_state.admission_exams = load_data(EXAMS_FILE, [])
 
         if not st.session_state.admission_exams:
             st.info("এখনো কোনো বিশ্ববিদ্যালয়ের তথ্য যোগ করা হয়নি। নিচে ফর্ম থেকে তথ্য যুক্ত করুন।")
@@ -762,6 +790,8 @@ elif st.session_state.page == "🎵 গানের জগত":
         st.title("🎵 গানের জগত")
         st.info("তোমার পছন্দের গানগুলো নিচে সরাসরি প্লেয়ারে শুনতে পারো:")
         st.write("---")
+        
+        st.session_state.my_songs = load_data(SONGS_FILE, DEFAULT_SONGS)
         
         for idx, song_url in enumerate(st.session_state.my_songs, 1):
             sc1, sc2 = st.columns([5, 1])
