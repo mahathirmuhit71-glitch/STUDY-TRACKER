@@ -681,138 +681,76 @@ elif st.session_state.page == "🎓 ভর্তি পরীক্ষার ত
                 st.markdown("<hr style='border: 0.5px solid #ddd;'>", unsafe_allow_html=True)
 
 # ----------------------------------------------------
-# PAGE 4: PDF TOOL (ORIGINAL UTILITIES RESTORED)
+# PAGE 4: PDF TOOL (SLIDE AUTO-LAYOUT & 3-IN-1 PROCESSOR)
 # ----------------------------------------------------
 elif st.session_state.page == "📄 PDF Tool":
     if st.session_state.is_focus_running:
         st.error("⚠️ Focus session is currently active! Be Consistent and Determined! Complete your session first.")
     else:
-        st.title("📄 PDF Power Utilities & Tools")
-        st.info("আপনার স্টাডি নোটস বা বইয়ের পিডিএফ ফাইলগুলো মার্জ, স্প্লিট, পেজ রিঅর্ডার বা প্রটেক্ট করতে নিচের ইউটিলিটিগুলো ব্যবহার করুন।")
-        
-        pdf_tab1, pdf_tab2, pdf_tab3, pdf_tab4 = st.tabs(["🔗 Merge PDFs", "✂️ Split PDF", "🔄 Reorder Pages", "🔒 Protect/Unlock PDF"])
-        
-        with pdf_tab1:
-            st.markdown("#### একাধিক পিডিএফ ফাইল একসাথে যুক্ত করুন")
-            uploaded_files = st.file_uploader("একাধিক PDF ফাইল আপলোড করুন", type=["pdf"], accept_multiple_files=True, key="merge_uploader")
-            if uploaded_files:
-                st.write(f"মোট ফাইল আপলোড হয়েছে: {len(uploaded_files)} টি")
-                if st.button("🔗 Merge PDFs Now"):
-                    merger_writer = PdfWriter()
-                    for f in uploaded_files:
-                        merger_writer.append(f)
-                    
-                    merged_output = BytesIO()
-                    merger_writer.write(merged_output)
-                    merger_writer.close()
-                    merged_output.seek(0)
-                    
-                    st.success("পিডিএফ সফলভাবে মার্জ হয়েছে!")
-                    st.download_button(
-                        label="📥 Download Merged PDF",
-                        data=merged_output,
-                        file_name="merged_document.pdf",
-                        mime="application/pdf"
-                    )
-                    
-        with pdf_tab2:
-            st.markdown("#### একটি পিডিএফ থেকে নির্দিষ্ট পেজ আলাদা করুন")
-            split_file = st.file_uploader("একটি PDF ফাইল আপলোড করুন", type=["pdf"], key="split_uploader")
-            if split_file:
-                reader = PdfReader(split_file)
-                total_pages = len(reader.pages)
-                st.info(f"এই পিডিএফে মোট পেজ আছে: {total_pages} টি")
-                
-                p_start = st.number_input("শুরু পেজ (Start Page)", min_value=1, max_value=total_pages, value=1)
-                p_end = st.number_input("শেষ পেজ (End Page)", min_value=1, max_value=total_pages, value=min(5, total_pages))
-                
-                if st.button("✂️ Split PDF Now"):
-                    if p_start <= p_end:
-                        writer = PdfWriter()
-                        for p_idx in range(p_start - 1, p_end):
-                            writer.add_page(reader.pages[p_idx])
-                            
-                        split_output = BytesIO()
-                        writer.write(split_output)
-                        writer.close()
-                        split_output.seek(0)
-                        
-                        st.success(f"পেজ {p_start} থেকে {p_end} পর্যন্ত সফলভাবে আলাদা করা হয়েছে!")
-                        st.download_button(
-                            label="📥 Download Split PDF",
-                            data=split_output,
-                            file_name=f"split_pages_{p_start}_to_{p_end}.pdf",
-                            mime="application/pdf"
-                        )
-                    else:
-                        st.error("শুরু পেজ শেষ পেজের চেয়ে বড় হতে পারবে না!")
+        st.markdown("<h3 style='color: #4CAF50;'>🤖 ২-ইন-১ পিডিএফ অটো-লেআউট টুল (নিখুঁত রেশিও)</h3>", unsafe_allow_html=True)
+        st.write("ফাইল আপলোড করুন; ল্যান্ডস্কেপ স্লাইডগুলো কোনো বর্ডার বা কাটিং ছাড়াই ১টি পেজে ৩টি করে নিখুঁতভাবে বসে যাবে।")
+        st.write("---")
 
-        with pdf_tab3:
-            st.markdown("#### পিডিএফ পেজের ক্রম পরিবর্তন করুন (Reorder)")
-            reorder_file = st.file_uploader("একটি PDF ফাইল আপলোড করুন (Reorder-এর জন্য)", type=["pdf"], key="reorder_uploader")
-            if reorder_file:
-                reader = PdfReader(reorder_file)
-                total_pages = len(reader.pages)
-                st.info(f"মোট পেজ: {total_pages} টি। কমা দিয়ে পেজ নম্বরগুলো আপনার পছন্দমতো সাজান (যেমন: 3, 1, 2, 4)।")
-                
-                default_order_str = ", ".join([str(i) for i in range(1, total_pages + 1)])
-                order_input = st.text_input("নতুন পেজ অর্ডার দিন:", value=default_order_str)
-                
-                if st.button("🔄 Reorder Pages Now"):
+        uploaded_files = st.file_uploader("আপনার পিডিএফ ফাইলগুলো এখানে সিলেক্ট করুন", type=["pdf"], accept_multiple_files=True)
+
+        if uploaded_files:
+            if st.button("🔄 প্রসেসিং শুরু করুন"):
+                with st.spinner("কাজ চলছে... নিখুঁত রেশিওতে লেআউট তৈরি হচ্ছে..."):
                     try:
-                        pages_list = [int(p.strip()) - 1 for p in order_input.split(",")]
-                        if all(0 <= p < total_pages for p in pages_list):
-                            writer = PdfWriter()
-                            for p_idx in pages_list:
-                                writer.add_page(reader.pages[p_idx])
+                        # ১. প্রথমে ফাইলগুলো মার্জ করা
+                        merged_writer = PdfWriter()
+                        for uploaded_file in uploaded_files:
+                            reader = PdfReader(uploaded_file)
+                            for page_obj in reader.pages:
+                                merged_writer.add_page(page_obj)
+                        
+                        temp_merged = os.path.join(user_folder, "temp_merged.pdf")
+                        with open(temp_merged, "wb") as f:
+                            merged_writer.write(f)
+                        
+                        # ২. স্লাইডের আসল রেশিও অনুযায়ী ফুল-স্ক্রিন লেআউট তৈরি
+                        output_pdf = os.path.join(user_folder, "processed_output.pdf")
+                        final_writer = PdfWriter()
+                        reader = PdfReader(temp_merged)
+                        total_pages = len(reader.pages)
+                        
+                        for i in range(0, total_pages, 3):
+                            first_page = reader.pages[i]
+                            orig_w = float(first_page.mediabox.width)
+                            orig_h = float(first_page.mediabox.height)
                             
-                            reorder_output = BytesIO()
-                            writer.write(reorder_output)
-                            writer.close()
-                            reorder_output.seek(0)
+                            new_w = orig_w
+                            new_h = orig_h * 3
                             
-                            st.success("পিডিএফ পেজ সফলভাবে রিঅর্ডার করা হয়েছে!")
+                            new_page = final_writer.add_blank_page(width=new_w, height=new_h)
+                            
+                            # ৩টি স্লাইড ওপর-নিচে নিখুঁতভাবে বসানো
+                            for j in range(3):
+                                if i + j < total_pages:
+                                    current_slide = reader.pages[i + j]
+                                    ty = (2 - j) * orig_h
+                                    new_page.merge_translated_page(current_slide, tx=0, ty=ty)
+                        
+                        with open(output_pdf, "wb") as f:
+                            final_writer.write(f)
+                        
+                        # টেম্পোরারি ফাইল রিমুভ করা
+                        if os.path.exists(temp_merged):
+                            os.remove(temp_merged)
+                            
+                        st.success("🎉 মাহাথির, আপনার নিখুঁত ফুল-স্ক্রিন ফাইলটি তৈরি হয়েছে!")
+                        with open(output_pdf, "rb") as f:
                             st.download_button(
-                                label="📥 Download Reordered PDF",
-                                data=reorder_output,
-                                file_name="reordered_document.pdf",
+                                label="📥 প্রসেসড পিডিএফ ডাউনলোড করুন",
+                                data=f,
+                                file_name="final_output.pdf",
                                 mime="application/pdf"
                             )
-                        else:
-                            st.error(f"দয়া করে ১ থেকে {total_pages} এর মধ্যে সঠিক পেজ নম্বর দিন।")
                     except Exception as e:
-                        st.error("ইনপুট ফরম্যাট ভুল হয়েছে। কমা দিয়ে শুধু সঠিক নম্বর দিন (যেমন: 1, 2, 3)।")
-
-        with pdf_tab4:
-            st.markdown("#### পিডিএফ ফাইল পাসওয়ার্ড দিয়ে প্রটেক্ট করুন")
-            protect_file = st.file_uploader("একটি PDF ফাইল আপলোড করুন (Protection-এর জন্য)", type=["pdf"], key="protect_uploader")
-            if protect_file:
-                pdf_password = st.text_input("নতুন পাসওয়ার্ড দিন (Password):", type="password")
-                if st.button("🔒 Encrypt & Protect PDF"):
-                    if pdf_password:
-                        reader = PdfReader(protect_file)
-                        writer = PdfWriter()
-                        for page in reader.pages:
-                            writer.add_page(page)
-                        writer.encrypt(pdf_password)
-                        
-                        prot_output = BytesIO()
-                        writer.write(prot_output)
-                        writer.close()
-                        prot_output.seek(0)
-                        
-                        st.success("পিডিএফ সফলভাবে পাসওয়ার্ড প্রটেক্টেড করা হয়েছে!")
-                        st.download_button(
-                            label="📥 Download Protected PDF",
-                            data=prot_output,
-                            file_name="protected_document.pdf",
-                            mime="application/pdf"
-                        )
-                    else:
-                        st.warning("দয়া করে একটি পাসওয়ার্ড দিন।")
+                        st.error(f"দুঃখিত, একটি সমস্যা হয়েছে: {e}")
 
 # ----------------------------------------------------
-# PAGE 5: SONGS WORLD (ADD SONG FORM MOVED TO BOTTOM)
+# PAGE 5: SONGS WORLD
 # ----------------------------------------------------
 elif st.session_state.page == "🎵 গানের জগত":
     if st.session_state.is_focus_running:
