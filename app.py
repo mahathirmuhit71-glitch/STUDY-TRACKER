@@ -155,9 +155,11 @@ if "is_focus_running" not in st.session_state:
     st.session_state.is_focus_running = False
 
 DAYS_OF_WEEK = ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
-current_day_name = datetime.today().strftime('%A')
-today_date_str = datetime.today().strftime('%Y-%m-%d')
-formatted_display_date = datetime.today().strftime('%d %B %Y')
+
+# Real-time dynamic date & day generation (Always fetches current system date)
+current_day_name = datetime.now().strftime('%A')
+today_date_str = datetime.now().strftime('%Y-%m-%d')
+formatted_display_date = datetime.now().strftime('%d %B %Y')
 
 # Sidebar Navigation Control with Strict Focus Guard
 st.sidebar.title("⚡ Muhit's Portal")
@@ -179,7 +181,7 @@ if page == "🏠 Dashboard & Focus Station":
     left_col, right_col = st.columns([1.8, 1.4])
     
     with left_col:
-        st.markdown(f"### 🌞 Daily Planner (Current Day: **{current_day_name}**)")
+        st.markdown(f"### 🌞 {formatted_display_date} | {current_day_name}")
         todays_tasks = [t for t in st.session_state.tasks if t.get('assigned_day') == current_day_name and not t.get('done', False)]
         
         if not todays_tasks:
@@ -289,13 +291,13 @@ if page == "🏠 Dashboard & Focus Station":
         else:
             st.info("💡 Click 'Focus Now' next to any task in your Daily Planner to begin your 25-minute session instantly.")
 
-        # স্পষ্ট দাগ বা ডিভাইডার
         st.markdown("<hr style='border: 1px solid #ccc; margin: 20px 0;'>", unsafe_allow_html=True)
 
         st.markdown(f"### 🎯 Daily Sessions (90-Minute Target Tracker)")
         st.markdown(f"**Day:** {current_day_name} | **Date:** {formatted_display_date}")
-        st.caption("প্রতিটি সেশন ৯০ মিনিটের।নিচে টিক দেও:")
+        st.caption("প্রতিটি সেশন ৯০ মিনিটের। আপনার পড়ার লক্ষ্য অনুযায়ী নিচে টিক দিন:")
 
+        # Auto-initialize or ensure today's key exists dynamically based on real system date
         if today_date_str not in st.session_state.daily_sessions:
             st.session_state.daily_sessions[today_date_str] = {
                 "day_name": current_day_name,
@@ -303,10 +305,13 @@ if page == "🏠 Dashboard & Focus Station":
                 "sessions": {f"90_{i}": False for i in range(1, 11)}
             }
             save_data(DAILY_SESSIONS_FILE, st.session_state.daily_sessions)
+        else:
+            # Sync existing key if day name or format drifted
+            st.session_state.daily_sessions[today_date_str]["day_name"] = current_day_name
+            st.session_state.daily_sessions[today_date_str]["display_date"] = formatted_display_date
 
         current_day_data = st.session_state.daily_sessions[today_date_str]
         
-        # Checkboxes for 90-Minute Sessions (10 sessions total, label is strictly "90")
         cols_chk = st.columns(2)
         session_keys = list(current_day_data["sessions"].keys())
         
@@ -320,12 +325,10 @@ if page == "🏠 Dashboard & Focus Station":
                     save_data(DAILY_SESSIONS_FILE, st.session_state.daily_sessions)
                     st.rerun()
 
-        # Calculate Total Minutes Read Today (Each session is 90 mins)
         completed_count = sum(1 for v in current_day_data["sessions"].values() if v)
         total_minutes_today = completed_count * 90
         st.markdown(f"💡 **আজকের মোট পড়া হয়েছে:** `{total_minutes_today} মিনিট`")
 
-        # স্পষ্ট দাগ বা ডিভাইডার
         st.markdown("<hr style='border: 1px solid #ccc; margin: 20px 0;'>", unsafe_allow_html=True)
 
         st.markdown("#### 📥 Study History PDF Report")
