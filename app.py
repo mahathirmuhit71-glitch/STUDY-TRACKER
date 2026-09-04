@@ -164,6 +164,12 @@ current_day_name = now_bd.strftime('%A')
 today_date_str = now_bd.strftime('%Y-%m-%d')
 formatted_display_date = now_bd.strftime('%d %B %Y')
 
+# Calculate Dynamic Countdown based on Target Date (Adjust target date as needed, currently set so today Sept 5 = 87 days)
+target_exam_date = datetime(2026, 12, 1, tzinfo=bd_tz) # Adjust if your target date is different
+remaining_days = (target_exam_date - now_bd).days
+if remaining_days < 0:
+    remaining_days = 0
+
 # Sidebar Navigation Control with Strict Focus Guard
 st.sidebar.title("⚡ Muhit's Portal")
 st.sidebar.markdown("**HSC Science Tracker**")
@@ -180,11 +186,11 @@ page = st.sidebar.radio("Navigation", page_selection, on_change=handle_nav_chang
 # PAGE 1: DASHBOARD & FOCUS STATION
 # ----------------------------------------------------
 if page == "🏠 Dashboard & Focus Station":
-    # Custom HTML Title with hidden clickable emoji link redirecting to tracker
-    st.markdown("""
+    # Custom HTML Title with hidden clickable emoji link redirecting to tracker and dynamic countdown text
+    st.markdown(f"""
         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
             <a href="#target-tracker" style="text-decoration: none; font-size: 32px; line-height: 1; cursor: pointer;" title="">⚡</a>
-            <h1 style="margin: 0; font-size: 2.25rem; font-weight: 700; color: #FFFFFF;">Muhit's Command Center</h1>
+            <h1 style="margin: 0; font-size: 2.25rem; font-weight: 700; color: #FFFFFF;">{remaining_days} days ahead (Consistent, Determined, Hardwork)</h1>
         </div>
     """, unsafe_allow_html=True)
 
