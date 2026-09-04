@@ -3,7 +3,7 @@ import pandas as pd
 import json
 import os
 import time
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from io import BytesIO
 
 # Try importing ReportLab for PDF generation
@@ -156,10 +156,13 @@ if "is_focus_running" not in st.session_state:
 
 DAYS_OF_WEEK = ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
 
-# Real-time dynamic date & day generation (Always fetches current system date)
-current_day_name = datetime.now().strftime('%A')
-today_date_str = datetime.now().strftime('%Y-%m-%d')
-formatted_display_date = datetime.now().strftime('%d %B %Y')
+# Bangladesh Timezone (UTC +6) strictly forced for Cloud Servers
+bd_tz = timezone(timedelta(hours=6))
+now_bd = datetime.now(bd_tz)
+
+current_day_name = now_bd.strftime('%A')
+today_date_str = now_bd.strftime('%Y-%m-%d')
+formatted_display_date = now_bd.strftime('%d %B %Y')
 
 # Sidebar Navigation Control with Strict Focus Guard
 st.sidebar.title("⚡ Muhit's Portal")
@@ -297,7 +300,7 @@ if page == "🏠 Dashboard & Focus Station":
         st.markdown(f"**Day:** {current_day_name} | **Date:** {formatted_display_date}")
         st.caption("প্রতিটি সেশন ৯০ মিনিটের। আপনার পড়ার লক্ষ্য অনুযায়ী নিচে টিক দিন:")
 
-        # Auto-initialize or ensure today's key exists dynamically based on real system date
+        # Auto-initialize or ensure today's key exists dynamically based on Bangladesh timezone date
         if today_date_str not in st.session_state.daily_sessions:
             st.session_state.daily_sessions[today_date_str] = {
                 "day_name": current_day_name,
@@ -306,7 +309,6 @@ if page == "🏠 Dashboard & Focus Station":
             }
             save_data(DAILY_SESSIONS_FILE, st.session_state.daily_sessions)
         else:
-            # Sync existing key if day name or format drifted
             st.session_state.daily_sessions[today_date_str]["day_name"] = current_day_name
             st.session_state.daily_sessions[today_date_str]["display_date"] = formatted_display_date
 
