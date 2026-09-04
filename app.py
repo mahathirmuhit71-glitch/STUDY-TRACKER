@@ -640,7 +640,7 @@ elif st.session_state.page == "🎵 গানের জগত":
         
         # তোমার দেওয়া ৪টি গানের লিংক
         my_songs = [
-            "https://youtu.be/abRJrye0-sI?si=D2mDrpckDUS32N3r",
+            "https://youtu.be/B-ISCaZ2EUw?si=vTmYZFYJ_d0zvuRt",
             "https://youtu.be/iR5U92Eq-_8",
             "https://youtu.be/Agcvgc23bNc",
             "https://youtu.be/QJpfLoGMgqU"
