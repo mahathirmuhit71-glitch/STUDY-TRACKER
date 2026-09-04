@@ -46,37 +46,7 @@ def get_user_data_dir(current_username):
         os.makedirs(user_dir)
     return user_dir
 
-# --- MULTI-USER AUTHENTICATION CONFIG ---
-names = ['Mahathir Muhit', 'Friend User']
-usernames = ['muhit', 'friend']
-passwords = ['12345', 'abcde']
 
-hashed_passwords = Hasher(passwords).generate()
-
-credentials = {
-    'usernames': {}
-}
-for i in range(len(usernames)):
-    credentials['usernames'][usernames[i]] = {
-        'name': names[i],
-        'password': hashed_passwords[i]
-    }
-
-authenticator = stauth.Authenticate(
-    credentials,
-    'muhit_portal_cookie',
-    'muhit_portal_signature',
-    cookie_expiry_days=30
-)
-
-# Login Widget Rendering
-name, authentication_status, username = authenticator.login('Login', 'main')
-
-if authentication_status == False:
-    st.error('ভুল ইউজারনেম অথবা পাসওয়ার্ড!')
-elif authentication_status == None:
-    st.warning('দয়া করে আপনার ইউজারনেম এবং পাসওয়ার্ড দিয়ে লগইন করুন।')
-elif authentication_status == True:
     
     # --- ইউজারের নিজস্ব ফোল্ডার ও ফাইল পাথ সেটআপ ---
     user_folder = get_user_data_dir(username)
