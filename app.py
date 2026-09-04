@@ -38,51 +38,12 @@ def save_data(file_path, data):
     with open(file_path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
-def get_user_data_dir(current_username):
-    user_dir = os.path.join(DATA_DIR, current_username)
-    if not os.path.exists(user_dir):
-        os.makedirs(user_dir)
-    return user_dir
-
-# --- SIMPLE SECURE CUSTOM AUTHENTICATION ---
-USERS_DB = {
-    'muhit': {'password': '12345', 'name': 'Mahathir Muhit'},
-    'friend': {'password': 'abcde', 'name': 'Friend User'}
-}
-
-if 'authentication_status' not in st.session_state:
-    st.session_state.authentication_status = False
-if 'username' not in st.session_state:
-    st.session_state.username = None
-if 'name' not in st.session_state:
-    st.session_state.name = None
-
-# Login Screen if not authenticated
-if not st.session_state.authentication_status:
-    col1, col2, col3 = st.columns([1, 1.2, 1])
-    with col2:
-        st.markdown("<h2 style='text-align: center; color: #FF4B4B;'>⚡ Portal Login</h2>", unsafe_allow_html=True)
-        with st.form("login_form"):
-            u_input = st.text_input("Username")
-            p_input = st.text_input("Password", type="password")
-            login_btn = st.form_submit_button("Login", use_container_width=True)
-            
-            if login_btn:
-                if u_input in USERS_DB and USERS_DB[u_input]['password'] == p_input:
-                    st.session_state.authentication_status = True
-                    st.session_state.username = u_input
-                    st.session_state.name = USERS_DB[u_input]['name']
-                    st.success("লগইন সফল হয়েছে!")
-                    time.sleep(0.5)
-                    st.rerun()
-                else:
-                    st.error("ভুল ইউজারনেম অথবা পাসওয়ার্ড!")
-    st.stop()
-
-# --- MAIN APP (After Successful Login) ---
-username = st.session_state.username
-name = st.session_state.name
-user_folder = get_user_data_dir(username)
+# ইউজার ফোল্ডার সেটআপ (muhit নামে পার্মানেন্ট ডেটা ফোল্ডার)
+username = "muhit"
+name = "Mahathir Muhit"
+user_folder = os.path.join(DATA_DIR, username)
+if not os.path.exists(user_folder):
+    os.makedirs(user_folder)
 
 TASKS_FILE = os.path.join(user_folder, "tasks.json")
 SYLLABUS_FILE = os.path.join(user_folder, "syllabus.json")
@@ -227,12 +188,6 @@ if remaining_days < 0:
 
 # Sidebar Navigation Control
 st.sidebar.title(f"⚡ Welcome, {name}")
-if st.sidebar.button("🚪 Logout", use_container_width=True):
-    st.session_state.authentication_status = False
-    st.session_state.username = None
-    st.session_state.name = None
-    st.rerun()
-
 st.sidebar.markdown("---")
 st.sidebar.markdown("**Navigation**")
 
