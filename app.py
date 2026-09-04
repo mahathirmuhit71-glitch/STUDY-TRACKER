@@ -164,33 +164,28 @@ current_day_name = now_bd.strftime('%A')
 today_date_str = now_bd.strftime('%Y-%m-%d')
 formatted_display_date = now_bd.strftime('%d %B %Y')
 
-# Calculate Dynamic Countdown based on Target Date (Adjust target date as needed, currently set so today Sept 5 = 87 days)
-target_exam_date = datetime(2026, 12, 1, tzinfo=bd_tz) # Adjust if your target date is different
+# Calculate Dynamic Countdown based on Target Date (Today Sept 5, 2026 starts with 87 days)
+target_exam_date = datetime(2026, 12, 1, tzinfo=bd_tz)
 remaining_days = (target_exam_date - now_bd).days
 if remaining_days < 0:
     remaining_days = 0
 
-# Sidebar Navigation Control with Strict Focus Guard
+# Sidebar Title (HSC Science Tracker removed)
 st.sidebar.title("⚡ Muhit's Portal")
-st.sidebar.markdown("**HSC Science Tracker**")
 
-def handle_nav_change():
-    if st.session_state.is_focus_running:
-        st.sidebar.error("⚠️ Be Consistent and Determined!")
-        time.sleep(1.2)
-
-page_selection = ["🏠 Dashboard & Focus Station", "📖 Syllabus Tracker"]
-page = st.sidebar.radio("Navigation", page_selection, on_change=handle_nav_change)
+# Initialize page state
+if "page" not in st.session_state:
+    st.session_state.page = "🏠 Dashboard & Focus Station"
 
 # ----------------------------------------------------
 # PAGE 1: DASHBOARD & FOCUS STATION
 # ----------------------------------------------------
-if page == "🏠 Dashboard & Focus Station":
+if st.session_state.page == "🏠 Dashboard & Focus Station":
     # Custom HTML Title with hidden clickable emoji link redirecting to tracker and dynamic countdown text
     st.markdown(f"""
         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
             <a href="#target-tracker" style="text-decoration: none; font-size: 32px; line-height: 1; cursor: pointer;" title="">⚡</a>
-            <h1 style="margin: 0; font-size: 2.25rem; font-weight: 700; color: #FFFFFF;">{remaining_days} days ahead (Consistent, Determined, Hardwork)</h1>
+            <h1 style="margin: 0; font-size: 2.25rem; font-weight: 700; color: #FFFFFF;">{remaining_days} days ahead (Consistent,Determined,Hardwork)</h1>
         </div>
     """, unsafe_allow_html=True)
 
@@ -404,10 +399,24 @@ if page == "🏠 Dashboard & Focus Station":
         else:
             st.warning("ReportLab library is not installed.")
 
+        # Centered Menu Buttons & Copyright Footer
+        st.markdown("<br><hr style='border: 1px solid #ddd;'>", unsafe_allow_html=True)
+        c_space1, c_btn1, c_btn2, c_space2 = st.columns([1, 1, 1, 1])
+        with c_btn1:
+            if st.button("🏠 Dashboard"):
+                st.session_state.page = "🏠 Dashboard & Focus Station"
+                st.rerun()
+        with c_btn2:
+            if st.button("📖 Syllabus Tracker"):
+                st.session_state.page = "📖 Syllabus Tracker"
+                st.rerun()
+        
+        st.markdown("<p style='text-align: center; color: gray; font-size: 0.85rem; margin-top: 15px;'>copyright@muhit'sportal</p>", unsafe_allow_html=True)
+
 # ----------------------------------------------------
 # PAGE 2: SYLLABUS TRACKER & INTEGRATED PDF REPORTS
 # ----------------------------------------------------
-elif page == "📖 Syllabus Tracker":
+elif st.session_state.page == "📖 Syllabus Tracker":
     if st.session_state.is_focus_running:
         st.error("⚠️ Focus session is currently active! Be Consistent and Determined! Complete your session first.")
     else:
@@ -523,3 +532,17 @@ elif page == "📖 Syllabus Tracker":
                         st.warning("ReportLab library is not installed, PDF generation is disabled.")
                 else:
                     st.info(f"No chapters completed yet for '{sub_name}'. Check off items above to generate your report and PDF.")
+
+        # Centered Menu Buttons & Copyright Footer
+        st.markdown("<br><hr style='border: 1px solid #ddd;'>", unsafe_allow_html=True)
+        c_space1, c_btn1, c_btn2, c_space2 = st.columns([1, 1, 1, 1])
+        with c_btn1:
+            if st.button("🏠 Dashboard"):
+                st.session_state.page = "🏠 Dashboard & Focus Station"
+                st.rerun()
+        with c_btn2:
+            if st.button("📖 Syllabus Tracker"):
+                st.session_state.page = "📖 Syllabus Tracker"
+                st.rerun()
+        
+        st.markdown("<p style='text-align: center; color: gray; font-size: 0.85rem; margin-top: 15px;'>copyright@muhit'sportal</p>", unsafe_allow_html=True)
