@@ -180,9 +180,7 @@ page_selection = [
     "🏠 Dashboard & Focus Station", 
     "📖 Syllabus Tracker", 
     "📄 PDF Tool", 
-    "🧪 Engineering Chemistry", 
-    "🎵 গানের জগত", 
-    "🌿 মন খারাপের দিনে"
+    "🎵 গানের জগত"
 ]
 
 def handle_nav_change():
@@ -194,11 +192,9 @@ def handle_nav_change():
 if "page" not in st.session_state:
     st.session_state.page = "🏠 Dashboard & Focus Station"
 
-# Determine radio index safely
 page_index_map = {page_selection[i]: i for i in range(len(page_selection))}
 current_index = page_index_map.get(st.session_state.page, 0)
 
-# Sync sidebar radio with session state cleanly
 sidebar_selection = st.sidebar.radio(
     "Go to", 
     page_selection, 
@@ -207,7 +203,6 @@ sidebar_selection = st.sidebar.radio(
     key="sidebar_radio"
 )
 
-# Update session state if sidebar changes
 if sidebar_selection != st.session_state.page and not st.session_state.is_focus_running:
     st.session_state.page = sidebar_selection
 
@@ -256,7 +251,6 @@ if st.session_state.page == "🏠 Dashboard & Focus Station":
                         
         st.write("---")
         
-        # Weekly Task Management with Delete Option
         col_title, col_btn = st.columns([2, 1])
         with col_title:
             st.markdown("#### 📋 Weekly Task Management")
@@ -576,7 +570,7 @@ elif st.session_state.page == "📄 PDF Tool":
         st.markdown("<h2 style='text-align: center; color: #4CAF50;'>👨‍💻 Mahathir Muhit Personal Workspace</h2>", unsafe_allow_html=True)
         st.markdown("<h3 style='text-align: center; color: #888888;'>🤖 ২-ইন-১ পিডিএফ অটো-লেআউট টুল (নিখুঁত রেশিও)</h3>", unsafe_allow_html=True)
         st.write("---")
-        st.write("ফাইল আপলোড করুন; ল্যান্ডস্কেপ স্লাইডগুলো কোনো বর্ডার বা কাটিং ছাড়াই ১টি পেজে ৩টি করে নিখুঁতভাবে বসে যাবে।")
+        st.write("ফাইল আপলোড করুন; ল্যান্ডস্কেপ স্লাইডগুলো কোনো বর্ডার বা কাটিং ছাড়াই ১টি পেজে ৩টি করে নিখুঁতভাবে বসে যাবে।")
 
         uploaded_files = st.file_uploader("আপনার পিডিএফ ফাইলগুলো এখানে সিলেক্ট করুন", type=["pdf"], accept_multiple_files=True, key="pdf_tool_uploader")
 
@@ -621,7 +615,7 @@ elif st.session_state.page == "📄 PDF Tool":
                         if os.path.exists(temp_merged):
                             os.remove(temp_merged)
                             
-                        st.success("🎉 মাহাথির, আপনার নিখুঁত ফুল-স্ক্রিন ফাইলটি তৈরি হয়েছে!")
+                        st.success("🎉 মাহাথির, আপনার নিখুঁত ফুল-স্ক্রিন ফাইলটি তৈরি হয়েছে!")
                         with open(output_pdf, "rb") as f:
                             st.download_button(
                                 label="📥 প্রসেসড পিডিএফ ডাউনলোড করুন",
@@ -631,62 +625,39 @@ elif st.session_state.page == "📄 PDF Tool":
                                 key="pdf_download_btn"
                             )
                     except Exception as e:
-                        st.error(f"দুঃখিত, একটি সমস্যা হয়েছে: {e}")
+                        st.error(f"দুঃখিত, একটি সমস্যা হয়েছে: {e}")
 
 # ----------------------------------------------------
-# PAGE 4: ENGINEERING CHEMISTRY
-# ----------------------------------------------------
-elif st.session_state.page == "🧪 Engineering Chemistry":
-    if st.session_state.is_focus_running:
-        st.error("⚠️ Focus session is currently active! Complete your session first.")
-    else:
-        st.title("🧪 Engineering Chemistry")
-        chem_url = "https://bondipathshala.education/bn/course-resource/saikt-bhaaiyyaar-inyjiniyyaarin-kemisttri/Course1757417481300"
-        st.markdown(f"**Direct Link:** [Click here to open Engineering Chemistry Course]({chem_url})")
-        st.write("নিচে সরাসরি পেজটি লোড করা হলো (যদি ব্রাউজার পলিসির কারণে লোড না হয়, তবে উপরের লিংকে ক্লিক করে সরাসরি চলে যেতে পারো):")
-        
-        # Display website inside an iframe component if supported
-        st.components.v1.iframe(chem_url, height=700, scrolling=True)
-
-# ----------------------------------------------------
-# PAGE 5: GANER JOGOT
+# PAGE 4: GANER JOGOT (Custom Songs Added)
 # ----------------------------------------------------
 elif st.session_state.page == "🎵 গানের জগত":
     if st.session_state.is_focus_running:
         st.error("⚠️ Focus session is currently active! Complete your session first.")
     else:
         st.title("🎵 গানের জগত")
-        st.info("ইউটিউব ছাড় ছাড়াই অ্যাপের ভেতরে গান বা প্লেলিস্ট উপভোগ করো:")
-        playlist_url = "https://youtube.com/playlist?list=PLHODjXdsL83Y&si=tL76yOW0HJr_m42k"
-        st.video(playlist_url)
-
-# ----------------------------------------------------
-# PAGE 6: MON KHARAPER DINE
-# ----------------------------------------------------
-elif st.session_state.page == "🌿 মন খারাপের দিনে":
-    if st.session_state.is_focus_running:
-        st.error("⚠️ Focus session is currently active! Complete your session first.")
-    else:
-        st.title("🌿 মন খারাপের দিনে")
-        st.write("মন ভালো করার কিছু সুন্দর মুহূর্ত ও ছবি:")
+        st.info("তোমার পছন্দের গানগুলো নিচে সরাসরি প্লেয়ারে শুনতে পারো:")
+        st.write("---")
         
-        # 5 Relaxing/Beautiful Image URLs
-        images = [
-            "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800", # Sea/Beach
-            "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800", # Nature/Forest
-            "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=800", # Mountains/Night sky
-            "https://images.unsplash.com/photo-1426604966848-d7adac902bff?w=800", # Landscape
-            "https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=800"  # Green trees
+        # তোমার দেওয়া ৪টি গানের লিংক
+        my_songs = [
+            "https://youtu.be/j6FpcvSor8g",
+            "https://youtu.be/iR5U92Eq-_8",
+            "https://youtu.be/Agcvgc23bNc",
+            "https://youtu.be/QJpfLoGMgqU"
         ]
         
-        for idx, img_url in enumerate(images, 1):
-            st.image(img_url, caption=f"রিলাক্সিং ভিউ #{idx}", use_container_width=True)
+        for idx, song_url in enumerate(my_songs, 1):
+            st.markdown(f"#### গান #{idx}")
+            try:
+                st.video(song_url)
+            except Exception as e:
+                st.error(f"গান লোড করতে সমস্যা হয়েছে: {e}")
             st.markdown("---")
 
 # Footer & Navigation buttons for main pages
 if st.session_state.page in ["🏠 Dashboard & Focus Station", "📖 Syllabus Tracker", "📄 PDF Tool"]:
     st.markdown("<br><hr style='border: 1px solid #ddd;'>", unsafe_allow_html=True)
-    c_space1, c_btn1, c_btn2, c_btn3, c_space2 = st.columns([1, 1, 1, 1, 1])
+    c_space1, c_btn1, c_btn2, c_space2 = st.columns([1, 1, 1, 1])
     with c_btn1:
         if st.button("🏠 Dashboard"):
             st.session_state.page = "🏠 Dashboard & Focus Station"
@@ -694,10 +665,6 @@ if st.session_state.page in ["🏠 Dashboard & Focus Station", "📖 Syllabus Tr
     with c_btn2:
         if st.button("📖 Syllabus Tracker"):
             st.session_state.page = "📖 Syllabus Tracker"
-            st.rerun()
-    with c_btn3:
-        if st.button("📄 PDF Tool"):
-            st.session_state.page = "📄 PDF Tool"
             st.rerun()
     
     st.markdown("<p style='text-align: center; color: gray; font-size: 0.85rem; margin-top: 15px;'>copyright@muhit'sportal</p>", unsafe_allow_html=True)
