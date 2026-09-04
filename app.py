@@ -31,6 +31,7 @@ SYLLABUS_FILE = os.path.join(DATA_DIR, "syllabus.json")
 TIMER_FILE = os.path.join(DATA_DIR, "timer_logs.json")
 DAILY_SESSIONS_FILE = os.path.join(DATA_DIR, "daily_sessions.json")
 EXAMS_FILE = os.path.join(DATA_DIR, "admission_exams.json")
+SONGS_FILE = os.path.join(DATA_DIR, "songs.json")
 
 def load_data(file_path, default_val):
     if os.path.exists(file_path):
@@ -49,6 +50,15 @@ def save_data(file_path, data):
 st.session_state.tasks = load_data(TASKS_FILE, [])
 st.session_state.daily_sessions = load_data(DAILY_SESSIONS_FILE, {})
 st.session_state.admission_exams = load_data(EXAMS_FILE, [])
+
+DEFAULT_SONGS = [
+    "https://youtu.be/B-ISCaZ2EUw?si=LHSLxrwL8gqv48SE",
+    "https://youtu.be/iR5U92Eq-_8",
+    "https://youtu.be/Agcvgc23bNc",
+    "https://youtu.be/QJpfLoGMgqU",
+    "https://youtu.be/aar0oGrJcDM?si=wRRJLEnHo4-dMa3j"
+]
+st.session_state.my_songs = load_data(SONGS_FILE, DEFAULT_SONGS)
 
 # Checklist Columns Definition for Different Subjects
 CHECKBOX_COLUMNS = ["Class", "Master Book", "Concept Book", "Short Note", "Book Reading", "VAP Master Bank"]
@@ -753,21 +763,37 @@ elif st.session_state.page == "🎵 গানের জগত":
         st.info("তোমার পছন্দের গানগুলো নিচে সরাসরি প্লেয়ারে শুনতে পারো:")
         st.write("---")
         
-        my_songs = [
-            "https://youtu.be/B-ISCaZ2EUw?si=LHSLxrwL8gqv48SE",
-            "https://youtu.be/iR5U92Eq-_8",
-            "https://youtu.be/Agcvgc23bNc",
-            "https://youtu.be/QJpfLoGMgqU",
-            "https://youtu.be/aar0oGrJcDM?si=wRRJLEnHo4-dMa3j"
-        ]
-        
-        for idx, song_url in enumerate(my_songs, 1):
-            st.markdown(f"#### গান #{idx}")
-            try:
-                st.video(song_url)
-            except Exception as e:
-                st.error(f"গান লোড করতে সমস্যা হয়েছে: {e}")
+        # Display existing songs with delete options
+        for idx, song_url in enumerate(st.session_state.my_songs, 1):
+            sc1, sc2 = st.columns([5, 1])
+            with sc1:
+                st.markdown(f"#### গান #{idx}")
+                try:
+                    st.video(song_url)
+                except Exception as e:
+                    st.error(f"গান লোড করতে সমস্যা হয়েছে: {e}")
+            with sc2:
+                st.write("")
+                st.write("")
+                if st.button("🗑️ মুছুন", key=f"del_song_{idx}"):
+                    st.session_state.my_songs.pop(idx - 1)
+                    save_data(SONGS_FILE, st.session_state.my_songs)
+                    st.rerun()
             st.markdown("---")
+
+        # Add new song form at the very end
+        st.markdown("#### ➕ নতুন গান যোগ করুন")
+        with st.form("add_song_form", clear_on_submit=True):
+            new_song_link = st.text_input("YouTube Song Link (যেমন: https://youtu.be/...)")
+            submit_song = st.form_submit_button("💾 গান সেভ করুন")
+            if submit_song:
+                if new_song_link:
+                    st.session_state.my_songs.append(new_song_link)
+                    save_data(SONGS_FILE, st.session_state.my_songs)
+                    st.success("নতুন গান সফলভাবে যোগ করা হয়েছে!")
+                    st.rerun()
+                else:
+                    st.warning("দয়া করে একটি সঠিক ইউটিউব লিংক দিন।")
 
 # Footer & Navigation buttons for main pages
 if st.session_state.page in ["🏠 Dashboard & Focus Station", "📖 Syllabus Tracker", "🎓 ভর্তি পরীক্ষার তারিখ", "📄 PDF Tool"]:
