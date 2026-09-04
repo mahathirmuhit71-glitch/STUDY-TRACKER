@@ -37,8 +37,9 @@ uvicorn==0.52.4
 watchdog==6.0.0
 websockets==16.1.1
 pypdf
-reportlab
 streamlit
 streamlit-authenticator
 pandas
+pypdf
+reportlab
 
