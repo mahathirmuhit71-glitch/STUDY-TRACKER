@@ -247,12 +247,24 @@ if st.session_state.page == "🏠 Dashboard & Focus Station":
                         st.write("🔒 Locked")
                         
         st.write("---")
-        st.markdown("#### 📋 Weekly Task Management")
+        
+        # Weekly Task Management with Delete Option
+        col_title, col_btn = st.columns([2, 1])
+        with col_title:
+            st.markdown("#### 📋 Weekly Task Management")
+        with col_btn:
+            if st.session_state.tasks:
+                if st.button("🧹 Clear All Tasks"):
+                    st.session_state.tasks = []
+                    save_data(TASKS_FILE, st.session_state.tasks)
+                    st.success("All tasks cleared!")
+                    st.rerun()
+
         if not st.session_state.tasks:
             st.info("Vault is empty. Add tasks below.")
         else:
             for idx, task in enumerate(st.session_state.tasks):
-                t_col1, t_col2 = st.columns([2, 1.5])
+                t_col1, t_col2, t_col3 = st.columns([1.5, 1.5, 0.8])
                 with t_col1:
                     if task.get('done', False):
                         st.write(f"✅ {task['title']}")
@@ -268,6 +280,12 @@ if st.session_state.page == "🏠 Dashboard & Focus Station":
                     if selected_day != task.get('assigned_day', 'None'):
                         task['assigned_day'] = selected_day
                         save_data(TASKS_FILE, st.session_state.tasks)
+                        st.rerun()
+                with t_col3:
+                    if st.button("🗑️ Delete", key=f"del_task_{task['id']}"):
+                        st.session_state.tasks = [t for t in st.session_state.tasks if t['id'] != task['id']]
+                        save_data(TASKS_FILE, st.session_state.tasks)
+                        st.success("Task deleted!")
                         st.rerun()
                         
         st.write("---")
