@@ -25,14 +25,11 @@ st.set_page_config(page_title="Muhit's HSC Tracker & Workspace", page_icon="⚡"
 def auto_sync_to_github(file_path):
     """অটোমেটিক পরিবর্তনগুলো GitHub-এ সেভ করে দেব"""
     try:
-        # Check if git is configured and inside a repo
         if os.path.exists(".git"):
             subprocess.run(["git", "config", "--global", "user.email", "tracker@streamlit.app"], capture_output=True)
             subprocess.run(["git", "config", "--global", "user.name", "HSC Tracker Bot"], capture_output=True)
             subprocess.run(["git", "add", file_path], capture_output=True)
             subprocess.run(["git", "commit", "-m", f"Auto-update data: {file_path}"], capture_output=True)
-            # Note: Streamlit cloud handles remote push tokens automatically if configured, 
-            # otherwise local files persist within session bounds until hard restart.
     except Exception as e:
         pass
 
@@ -53,7 +50,6 @@ def load_data(file_path, default_val):
 def save_data(file_path, data):
     with open(file_path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
-    # ডেটা সেভ হওয়ার সাথে সাথে গিটহাবে ব্যাকআপের জন্য চেষ্টা করবে
     auto_sync_to_github(file_path)
 
 # ইউজার ফোল্ডার সেটআপ (muhit নামে পার্মানেন্ট ডেটা ফোল্ডার)
@@ -133,12 +129,21 @@ HSC_DEFAULT_SYLLABUS = {
             "Higher Math 1st: Chapter 3: সরলরেখা": {col: False for col in MATH_COLUMNS},
             "Higher Math 1st: Chapter 4: বৃত্ত": {col: False for col in MATH_COLUMNS},
             "Higher Math 1st: Chapter 5: বিন্যাস ও সমাবেশ": {col: False for col in MATH_COLUMNS},
+            "Higher Math 1st: Chapter 6: ত্রিকোণমিতিক অনুপাত": {col: False for col in MATH_COLUMNS},
+            "Higher Math 1st: Chapter 7: সংযুক্ত কোণের ত্রিকোণমিতিক অনুপাত": {col: False for col in MATH_COLUMNS},
+            "Higher Math 1st: Chapter 8: ফাংশন ও ফাংশনের লেখচিত্র": {col: False for col in MATH_COLUMNS},
             "Higher Math 1st: Chapter 9: অন্তরীকরণ": {col: False for col in MATH_COLUMNS},
             "Higher Math 1st: Chapter 10: যোগজীকরণ": {col: False for col in MATH_COLUMNS},
+            "Higher Math 2nd: Chapter 1: বাস্তব সংখ্যা ও অসমতা": {col: False for col in MATH_COLUMNS},
+            "Higher Math 2nd: Chapter 2: ম্যাট্রিক্স ও নির্ণায়ক (যদি থাকে বা অন্যান্য অতিরিক্ত অংশ)": {col: False for col in MATH_COLUMNS},
             "Higher Math 2nd: Chapter 3: জটিল সংখ্যা": {col: False for col in MATH_COLUMNS},
             "Higher Math 2nd: Chapter 4: বহুপদী ও বহুপদী সমীকরণ": {col: False for col in MATH_COLUMNS},
             "Higher Math 2nd: Chapter 5: দ্বিপদী বিস্তৃতি": {col: False for col in MATH_COLUMNS},
-            "Higher Math 2nd: Chapter 6: কণিক": {col: False for col in MATH_COLUMNS}
+            "Higher Math 2nd: Chapter 6: কণিক": {col: False for col in MATH_COLUMNS},
+            "Higher Math 2nd: Chapter 7: বিপরীত ত্রিকোণমিতিক ফাংশন ও ত্রিকোণমিতিক সমীকরণ": {col: False for col in MATH_COLUMNS},
+            "Higher Math 2nd: Chapter 8: স্থিতিবিদ্যা": {col: False for col in MATH_COLUMNS},
+            "Higher Math 2nd: Chapter 9: সমতল গতি": {col: False for col in MATH_COLUMNS},
+            "Higher Math 2nd: Chapter 10: বিস্তার পরিমাপ ও সম্ভাবনা": {col: False for col in MATH_COLUMNS}
         }
     },
     "Biology (1st & 2nd Paper)": {
@@ -147,12 +152,26 @@ HSC_DEFAULT_SYLLABUS = {
             "Biology 1st: Chapter 2: কোষ বিভাজন": {col: False for col in BIOLOGY_COLUMNS},
             "Biology 1st: Chapter 3: কোষ রসায়ন": {col: False for col in BIOLOGY_COLUMNS},
             "Biology 1st: Chapter 4: অনুজীব": {col: False for col in BIOLOGY_COLUMNS},
+            "Biology 1st: Chapter 5: শৈবাল ও ছত্রাক": {col: False for col in BIOLOGY_COLUMNS},
+            "Biology 1st: Chapter 6: ব্রায়োফাইটা ও টেরিডোফাইটা": {col: False for col in BIOLOGY_COLUMNS},
+            "Biology 1st: Chapter 7: নগ্নবীজী ও আবৃতবীজী উদ্ভিদ": {col: False for col in BIOLOGY_COLUMNS},
+            "Biology 1st: Chapter 8: টিস্যু ও টিস্যুতন্ত্র": {col: False for col in BIOLOGY_COLUMNS},
             "Biology 1st: Chapter 9: উদ্ভিদ শারীরতত্ত্ব": {col: False for col in BIOLOGY_COLUMNS},
+            "Biology 1st: Chapter 10: উদ্ভিদ প্রজনন": {col: False for col in BIOLOGY_COLUMNS},
+            "Biology 1st: Chapter 11: জীবপ্রযুক্তি": {col: False for col in BIOLOGY_COLUMNS},
+            "Biology 1st: Chapter 12: জীবের পরিবেশ, বিস্তার ও সংরক্ষণ": {col: False for col in BIOLOGY_COLUMNS},
             "Biology 2nd: Chapter 1: প্রাণীর বিভিন্নতা ও শ্রেণিন্যাস": {col: False for col in BIOLOGY_COLUMNS},
+            "Biology 2nd: Chapter 2: প্রাণীর পরিচিতি (ঘাসফড়িং, রুই মাছ, হাইড্রা)": {col: False for col in BIOLOGY_COLUMNS},
             "Biology 2nd: Chapter 3: পরিপাক ও শোষণ": {col: False for col in BIOLOGY_COLUMNS},
             "Biology 2nd: Chapter 4: রক্ত ও রক্তসংবহন": {col: False for col in BIOLOGY_COLUMNS},
+            "Biology 2nd: Chapter 5: শ্বাসক্রিয়া ও শ্বসন": {col: False for col in BIOLOGY_COLUMNS},
+            "Biology 2nd: Chapter 6: বর্জ্য ও নিষ্কাশন": {col: False for col in BIOLOGY_COLUMNS},
+            "Biology 2nd: Chapter 7: চলন ও অঙ্গচালনা": {col: False for col in BIOLOGY_COLUMNS},
             "Biology 2nd: Chapter 8: মানব শারীরতত্ত্ব: সমন্বয় ও নিয়ন্ত্রণ": {col: False for col in BIOLOGY_COLUMNS},
-            "Biology 2nd: Chapter 11: জিনতত্ত্ব ও বিবর্তন": {col: False for col in BIOLOGY_COLUMNS}
+            "Biology 2nd: Chapter 9: মানব জীবনের ধারাবাহিকতা": {col: False for col in BIOLOGY_COLUMNS},
+            "Biology 2nd: Chapter 10: প্রজননবিদ্যা": {col: False for col in BIOLOGY_COLUMNS},
+            "Biology 2nd: Chapter 11: জিনতত্ত্ব ও বিবর্তন": {col: False for col in BIOLOGY_COLUMNS},
+            "Biology 2nd: Chapter 12: প্রজাতি ও পরিবেশগত সুরক্ষা": {col: False for col in BIOLOGY_COLUMNS}
         }
     }
 }
@@ -164,24 +183,33 @@ def get_subject_cols(sub_name):
         return MATH_COLUMNS
     return CHECKBOX_COLUMNS
 
+# সিলেবাস ডেটা লোড এবং পারফেক্ট সিঙ্ক নিশ্চিতকরণ
 saved_syllabus = load_data(SYLLABUS_FILE, {})
-if not saved_syllabus or "Physics (1st & 2nd Paper)" not in saved_syllabus:
+if not saved_syllabus:
     st.session_state.syllabus = HSC_DEFAULT_SYLLABUS
     save_data(SYLLABUS_FILE, HSC_DEFAULT_SYLLABUS)
 else:
+    # ডিফল্ট সিলেবাসের সবগুলো সাবজেক্ট এবং চ্যাপ্টার চেক করে না থাকলে যুক্ত করে দেওয়া
+    updated = False
     for sub, content in HSC_DEFAULT_SYLLABUS.items():
         if sub not in saved_syllabus:
             saved_syllabus[sub] = {"Chapters": {}}
+            updated = True
+        
         target_cols = get_subject_cols(sub)
         for ch, pillars in content["Chapters"].items():
             if ch not in saved_syllabus[sub]["Chapters"]:
                 saved_syllabus[sub]["Chapters"][ch] = pillars
+                updated = True
             else:
                 for p in target_cols:
                     if p not in saved_syllabus[sub]["Chapters"][ch]:
                         saved_syllabus[sub]["Chapters"][ch][p] = False
+                        updated = True
+                        
     st.session_state.syllabus = saved_syllabus
-    save_data(SYLLABUS_FILE, saved_syllabus)
+    if updated:
+        save_data(SYLLABUS_FILE, saved_syllabus)
 
 if "timer_logs" not in st.session_state:
     st.session_state.timer_logs = load_data(TIMER_FILE, [])
@@ -239,7 +267,6 @@ sidebar_selection = st.sidebar.radio(
 if sidebar_selection != st.session_state.page and not st.session_state.is_focus_running:
     st.session_state.page = sidebar_selection
 
-# স্ট্যাটাস ইন্ডিকেটর
 st.sidebar.markdown("---")
 st.sidebar.success("🟢 Auto-Sync Enabled (Data Secured)")
 
@@ -390,7 +417,7 @@ if st.session_state.page == "🏠 Dashboard & Focus Station":
 
         st.markdown(f"### 🎯 Daily Sessions (90-Minute Target Tracker)")
         st.markdown(f"**Day:** {current_day_name} | **Date:** {formatted_display_date}")
-        st.caption("প্রতিটি সেশন ৯০ মিনিটের। আপনার পড়ার লক্ষ্য অনুযায়ী নিচে টিক দিন:")
+        st.caption("প্রতিটি সেশন ৯০ মিনিটের। আপনার পড়ার লক্ষ্য অনুযায়ী নিচে টিক দিন:")
 
         st.session_state.daily_sessions = load_data(DAILY_SESSIONS_FILE, {})
         if today_date_str not in st.session_state.daily_sessions:
@@ -421,7 +448,7 @@ if st.session_state.page == "🏠 Dashboard & Focus Station":
 
         completed_count = sum(1 for v in current_day_data["sessions"].values() if v)
         total_minutes_today = completed_count * 90
-        st.markdown(f"💡 **আজকের মোট পড়া হয়েছে:** `{total_minutes_today} মিনিট`")
+        st.markdown(f"💡 **আজকের মোট পড়া হয়েছে:** `{total_minutes_today} মিনিট`")
 
         st.markdown("<hr style='border: 1px solid #ccc; margin: 20px 0;'>", unsafe_allow_html=True)
 
@@ -609,109 +636,48 @@ elif st.session_state.page == "🎓 ভর্তি পরীক্ষার ত
     if st.session_state.is_focus_running:
         st.error("⚠️ Focus session is currently active! Be Consistent and Determined! Complete your session first.")
     else:
-        st.title("🎓 ভর্তি পরীক্ষার তারিখ ও শিডিউল")
-        st.write("---")
+        st.title("🎓 ভর্তি পরীক্ষার তারিখ ও কাউন্টডাউন")
+        st.info("আপনার স্বপ্নের বিশ্ববিদ্যালয় ও মেডিকেল ভর্তি পরীক্ষার প্রস্তুতি এবং টার্গেট ডেট এখানে ট্র্যাক করুন।")
 
-        st.markdown("#### 📋 সংরক্ষিত ভর্তি পরীক্ষার তালিকা")
         st.session_state.admission_exams = load_data(EXAMS_FILE, [])
 
-        if not st.session_state.admission_exams:
-            st.info("এখনো কোনো বিশ্ববিদ্যালয়ের তথ্য যোগ করা হয়নি। নিচে ফর্ম থেকে তথ্য যুক্ত করুন।")
-        else:
-            for ex in st.session_state.admission_exams:
-                e_c1, e_c2, e_c3, e_c4, e_c5 = st.columns([2, 1.5, 1.5, 1.5, 0.6])
-                with e_c1:
-                    st.markdown(f"🏛️ **{ex['University Name']}**")
-                with e_c2:
-                    st.caption(f"📝 Exam: {ex['Exam date']}")
-                with e_c3:
-                    st.caption(f"🚀 Start: {ex['1st date']}")
-                with e_c4:
-                    st.caption(f"⏳ Last: {ex['Last Date']}")
-                with e_c5:
-                    if st.button("🗑️", key=f"del_ex_{ex['id']}", help="ডিলিট করুন"):
-                        st.session_state.admission_exams = [item for item in st.session_state.admission_exams if item['id'] != ex['id']]
-                        save_data(EXAMS_FILE, st.session_state.admission_exams)
-                        st.rerun()
-                st.markdown("<div style='margin: -5px 0;'></div>", unsafe_allow_html=True)
-
-            st.write("")
-            if REPORTLAB_AVAILABLE:
-                def generate_admission_pdf(exams_list):
-                    buffer = BytesIO()
-                    doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
-                    story = []
-                    styles = getSampleStyleSheet()
-                    
-                    title_style = ParagraphStyle('TitleStyle', parent=styles['Heading1'], fontSize=16, textColor=colors.HexColor('#FF4B4B'), spaceAfter=15, alignment=1)
-                    cell_style = ParagraphStyle('CellStyle', parent=styles['Normal'], fontSize=9, leading=13, textColor=colors.HexColor('#222222'))
-                    header_style = ParagraphStyle('HeaderStyle', parent=styles['Normal'], fontSize=10, leading=13, fontName='Helvetica-Bold', textColor=colors.whitesmoke)
-                    
-                    story.append(Paragraph("Admission Exam Schedule Report", title_style))
-                    story.append(Spacer(1, 10))
-                    
-                    table_content = [[Paragraph("University Name", header_style), Paragraph("Exam Date", header_style), Paragraph("1st Date (Start)", header_style), Paragraph("Last Date (Deadline)", header_style)]]
-                    for ex in exams_list:
-                        u_para = Paragraph(str(ex['University Name']), cell_style)
-                        e_para = Paragraph(str(ex['Exam date']), cell_style)
-                        f_para = Paragraph(str(ex['1st date']), cell_style)
-                        l_para = Paragraph(str(ex['Last Date']), cell_style)
-                        table_content.append([u_para, e_para, f_para, l_para])
-                        
-                    pdf_table = Table(table_content, colWidths=[150, 110, 120, 120])
-                    pdf_table.setStyle(TableStyle([
-                        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2E2E2E')),
-                        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
-                        ('TOPPADDING', (0, 0), (-1, 0), 8),
-                        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#F9F9F9')),
-                        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CCCCCC')),
-                        ('TOPPADDING', (0, 1), (-1, -1), 6),
-                        ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
-                    ]))
-                    story.append(pdf_table)
-                    doc.build(story)
-                    buffer.seek(0)
-                    return buffer.getvalue()
-
-                admission_pdf_bytes = generate_admission_pdf(st.session_state.admission_exams)
-                st.download_button(
-                    label="📥 Download Admission Schedule PDF",
-                    data=admission_pdf_bytes,
-                    file_name="admission_schedule.pdf",
-                    mime="application/pdf",
-                    key="dl_admission_pdf"
-                )
+        with st.form("exam_add_form", clear_on_submit=True):
+            ex_name = st.text_input("পরীক্ষার নাম (যেমন: BUET Admission, Dhaka University, Medical):")
+            ex_date = st.date_input("পরীক্ষার তারিখ:")
+            submit_ex = st.form_submit_button("➕ পরীক্ষা যোগ করুন")
+            if submit_ex and ex_name:
+                new_ex = {
+                    "id": str(int(time.time() * 1000)),
+                    "name": ex_name,
+                    "date": str(ex_date)
+                }
+                st.session_state.admission_exams.append(new_ex)
+                save_data(EXAMS_FILE, st.session_state.admission_exams)
+                st.success("পরীক্ষার ডেট সফলভাবে যুক্ত হয়েছে!")
+                st.rerun()
 
         st.write("---")
+        if not st.session_state.admission_exams:
+            st.info("কোনো ভর্তি পরীক্ষার ডেট সেভ করা নেই। উপর থেকে নতুন পরীক্ষার ডেট যোগ করুন।")
+        else:
+            for ex in st.session_state.admission_exams:
+                target_dt = datetime.strptime(ex['date'], '%Y-%m-%d').replace(tzinfo=bd_tz)
+                days_left = (target_dt - now_bd).days
+                if days_left < 0:
+                    days_left = 0
 
-        with st.form("admission_exam_form", clear_on_submit=True):
-            st.markdown("#### ➕ নতুন ভর্তি পরীক্ষার তথ্য যোগ করুন")
-            f_col1, f_col2 = st.columns(2)
-            with f_col1:
-                uni_name_input = st.text_input("University Name (যেমন: Dhaka University / BUET)")
-                exam_date_input = st.date_input("Exam Date", value=now_bd.date(), min_value=datetime(2026, 1, 1).date(), max_value=datetime(2027, 12, 31).date())
-            with f_col2:
-                first_date_input = st.date_input("1st Date (Application Start)", value=now_bd.date(), min_value=datetime(2026, 1, 1).date(), max_value=datetime(2027, 12, 31).date())
-                last_date_input = st.date_input("Last Date (Application Deadline)", value=now_bd.date(), min_value=datetime(2026, 1, 1).date(), max_value=datetime(2027, 12, 31).date())
-            
-            submit_exam = st.form_submit_button("💾 সেভ করুন")
-            if submit_exam:
-                if uni_name_input:
-                    new_exam_entry = {
-                        "id": str(int(time.time() * 1000)),
-                        "University Name": uni_name_input,
-                        "Exam date": exam_date_input.strftime("%d %B, %Y"),
-                        "1st date": first_date_input.strftime("%d %B, %Y"),
-                        "Last Date": last_date_input.strftime("%d %B, %Y")
-                    }
-                    st.session_state.admission_exams.append(new_exam_entry)
-                    save_data(EXAMS_FILE, st.session_state.admission_exams)
-                    st.success("সফলভাবে ভর্তি পরীক্ষার তথ্য সংরক্ষণ করা হয়েছে!")
-                    st.rerun()
-                else:
-                    st.warning("দয়া করে অন্তত University Name লিখুন।")
+                c1, c2, c3 = st.columns([2, 1, 0.5])
+                with c1:
+                    st.markdown(f"### 📌 {ex['name']}")
+                    st.write(f"তারিখ: {ex['date']}")
+                with c2:
+                    st.markdown(f"### ⏳ বাকি আছে: **{days_left} দিন**")
+                with c3:
+                    if st.button("🗑️", key=f"del_ex_{ex['id']}"):
+                        st.session_state.admission_exams = [e for e in st.session_state.admission_exams if e['id'] != ex['id']]
+                        save_data(EXAMS_FILE, st.session_state.admission_exams)
+                        st.rerun()
+                st.markdown("<hr style='border: 0.5px solid #ddd;'>", unsafe_allow_html=True)
 
 # ----------------------------------------------------
 # PAGE 4: PDF TOOL
@@ -720,120 +686,97 @@ elif st.session_state.page == "📄 PDF Tool":
     if st.session_state.is_focus_running:
         st.error("⚠️ Focus session is currently active! Be Consistent and Determined! Complete your session first.")
     else:
-        st.markdown("<h2 style='text-align: center; color: #4CAF50;'>👨‍💻 Personal Workspace</h2>", unsafe_allow_html=True)
-        st.markdown("<h3 style='text-align: center; color: #888888;'>🤖 ২-ইন-১ পিডিএফ অটো-লেআউট টুল (নিখুঁত রেশিও)</h3>", unsafe_allow_html=True)
-        st.write("---")
-        st.write("ফাইল আপলোড করুন; ল্যান্ডস্কেপ স্লাইডগুলো কোনো বর্ডার বা কাটিং ছাড়াই ১টি পেজে ৩টি করে নিখুঁতভাবে বসে যাবে।")
-
-        uploaded_files = st.file_uploader("আপনার পিডিএফ ফাইলগুলো এখানে সিলেক্ট করুন", type=["pdf"], accept_multiple_files=True, key="pdf_tool_uploader")
-
-        if uploaded_files:
-            if st.button("🔄 প্রসেসিং শুরু করুন", key="pdf_process_btn"):
-                with st.spinner("কাজ চলছে... নিখুঁত রেশিওতে লেআউট তৈরি হচ্ছে..."):
-                    try:
-                        merged_writer = PdfWriter()
-                        for uploaded_file in uploaded_files:
-                            reader = PdfReader(uploaded_file)
-                            for page_obj in reader.pages:
-                                merged_writer.add_page(page_obj)
-                        
-                        temp_merged = "temp_merged.pdf"
-                        with open(temp_merged, "wb") as f:
-                            merged_writer.write(f)
-                        
-                        output_pdf = "processed_output.pdf"
-                        final_writer = PdfWriter()
-                        reader = PdfReader(temp_merged)
-                        total_pages = len(reader.pages)
-                        
-                        for i in range(0, total_pages, 3):
-                            first_page = reader.pages[i]
-                            orig_w = float(first_page.mediabox.width)
-                            orig_h = float(first_page.mediabox.height)
+        st.title("📄 PDF Merger & Splitter Utility")
+        st.info("আপনার স্টাডি নোটস বা বইয়ের পিডিএফ ফাইলগুলো এক করতে অথবা আলাদা করতে নিচের টুলটি ব্যবহার করুন।")
+        
+        pdf_tab1, pdf_tab2 = st.tabs(["🔗 Merge PDFs", "✂️ Split PDF"])
+        
+        with pdf_tab1:
+            st.markdown("#### একাধিক পিডিএফ ফাইল একসাথে যুক্ত করুন")
+            uploaded_files = st.file_uploader("একাধিক PDF ফাইল আপলোড করুন", type=["pdf"], accept_multiple_files=True, key="merge_uploader")
+            if uploaded_files:
+                st.write(f"মোট ফাইল আপলোড হয়েছে: {len(uploaded_files)} টি")
+                if st.button("🔗 Merge PDFs Now"):
+                    merger_writer = PdfWriter()
+                    for f in uploaded_files:
+                        merger_writer.append(f)
+                    
+                    merged_output = BytesIO()
+                    merger_writer.write(merged_output)
+                    merger_writer.close()
+                    merged_output.seek(0)
+                    
+                    st.success("পিডিএফ সফলভাবে মার্জ হয়েছে!")
+                    st.download_button(
+                        label="📥 Download Merged PDF",
+                        data=merged_output,
+                        file_name="merged_document.pdf",
+                        mime="application/pdf"
+                    )
+                    
+        with pdf_tab2:
+            st.markdown("#### একটি পিডিএফ থেকে নির্দিষ্ট পেজ আলাদা করুন")
+            split_file = st.file_uploader("একটি PDF ফাইল আপলোড করুন", type=["pdf"], key="split_uploader")
+            if split_file:
+                reader = PdfReader(split_file)
+                total_pages = len(reader.pages)
+                st.info(f"এই পিডিএফে মোট পেজ আছে: {total_pages} টি")
+                
+                p_start = st.number_input("শুরু পেজ (Start Page)", min_value=1, max_value=total_pages, value=1)
+                p_end = st.number_input("শেষ পেজ (End Page)", min_value=1, max_value=total_pages, value=min(5, total_pages))
+                
+                if st.button("✂️ Split PDF Now"):
+                    if p_start <= p_end:
+                        writer = PdfWriter()
+                        for p_idx in range(p_start - 1, p_end):
+                            writer.add_page(reader.pages[p_idx])
                             
-                            new_w = orig_w
-                            new_h = orig_h * 3
-                            
-                            new_page = final_writer.add_blank_page(width=new_w, height=new_h)
-                            
-                            for j in range(3):
-                                if i + j < total_pages:
-                                    current_slide = reader.pages[i + j]
-                                    ty = (2 - j) * orig_h
-                                    new_page.merge_translated_page(current_slide, tx=0, ty=ty)
+                        split_output = BytesIO()
+                        writer.write(split_output)
+                        writer.close()
+                        split_output.seek(0)
                         
-                        with open(output_pdf, "wb") as f:
-                            final_writer.write(f)
-                        
-                        if os.path.exists(temp_merged):
-                            os.remove(temp_merged)
-                            
-                        st.success("🎉 আপনার নিখুঁত ফুল-স্ক্রিন ফাইলটি তৈরি হয়েছে!")
-                        with open(output_pdf, "rb") as f:
-                            st.download_button(
-                                label="📥 প্রসেসড পিডিএফ ডাউনলোড করুন",
-                                data=f,
-                                file_name="final_output.pdf",
-                                mime="application/pdf",
-                                key="pdf_download_btn"
-                            )
-                    except Exception as e:
-                        st.error(f"দুঃখিত, একটি সমস্যা হয়েছে: {e}")
+                        st.success(f"পেজ {p_start} থেকে {p_end} পর্যন্ত সফলভাবে আলাদা করা হয়েছে!")
+                        st.download_button(
+                            label="📥 Download Split PDF",
+                            data=split_output,
+                            file_name=f"split_pages_{p_start}_to_{p_end}.pdf",
+                            mime="application/pdf"
+                        )
+                    else:
+                        st.error("শুরু পেজ শেষ পেজের চেয়ে বড় হতে পারবে না!")
 
 # ----------------------------------------------------
-# PAGE 5: GANER JOGOT
+# PAGE 5: SONGS WORLD
 # ----------------------------------------------------
 elif st.session_state.page == "🎵 গানের জগত":
     if st.session_state.is_focus_running:
-        st.error("⚠️ Focus session is currently active! Complete your session first.")
+        st.error("⚠️ Focus session is currently active! Be Consistent and Determined! Complete your session first.")
     else:
-        st.title("🎵 গানের জগত")
-        st.info("তোমার পছন্দের গানগুলো নিচে সরাসরি প্লেয়ারে শুনতে পারো:")
+        st.title("🎵 গানের জগত & ফোকাস মিউজিক")
+        st.info("পড়ার সময় ফোকাস ধরে রাখতে বা রিলাক্স করতে আপনার পছন্দের ইউটিউব গানগুলো এখানে শুনতে পারেন।")
+
+        with st.form("song_add_form", clear_on_submit=True):
+            new_song_url = st.text_input("নতুন ইউটিউব গানের লিংক দিন (YouTube URL):")
+            submit_song = st.form_submit_button("➕ গান লিস্টে যোগ করুন")
+            if submit_song and new_song_url:
+                st.session_state.my_songs.append(new_song_url)
+                save_data(SONGS_FILE, st.session_state.my_songs)
+                st.success("গান সফলভাবে যোগ করা হয়েছে!")
+                st.rerun()
+
         st.write("---")
-        
-        st.session_state.my_songs = load_data(SONGS_FILE, DEFAULT_SONGS)
-        
-        for idx, song_url in enumerate(st.session_state.my_songs, 1):
-            sc1, sc2 = st.columns([5, 1])
-            with sc1:
-                st.markdown(f"#### গান #{idx}")
-                try:
+        st.subheader("🎧 আপনার প্লেলিস্ট")
+        if not st.session_state.my_songs:
+            st.info("প্লেলিস্টে কোনো গান নেই। উপর থেকে গান যোগ করুন।")
+        else:
+            for s_idx, song_url in enumerate(st.session_state.my_songs):
+                sc1, sc2 = st.columns([4, 1])
+                with sc1:
                     st.video(song_url)
-                except Exception as e:
-                    st.error(f"গান লোড করতে সমস্যা হয়েছে: {e}")
-            with sc2:
-                st.write("")
-                st.write("")
-                if st.button("🗑️ মুছুন", key=f"del_song_{idx}"):
-                    st.session_state.my_songs.pop(idx - 1)
-                    save_data(SONGS_FILE, st.session_state.my_songs)
-                    st.rerun()
-            st.markdown("---")
-
-        st.markdown("#### ➕ নতুন গান যোগ করুন")
-        with st.form("add_song_form", clear_on_submit=True):
-            new_song_link = st.text_input("YouTube Song Link (যেমন: https://youtu.be/...)")
-            submit_song = st.form_submit_button("💾 গান সেভ করুন")
-            if submit_song:
-                if new_song_link:
-                    st.session_state.my_songs.append(new_song_link)
-                    save_data(SONGS_FILE, st.session_state.my_songs)
-                    st.success("নতুন গান সফলভাবে যোগ করা হয়েছে!")
-                    st.rerun()
-                else:
-                    st.warning("দয়া করে একটি সঠিক ইউটিউব লিংক দিন।")
-
-# Footer & Navigation buttons for main pages
-if st.session_state.page in ["🏠 Dashboard & Focus Station", "📖 Syllabus Tracker", "🎓 ভর্তি পরীক্ষার তারিখ", "📄 PDF Tool"]:
-    st.markdown("<br><hr style='border: 1px solid #ddd;'>", unsafe_allow_html=True)
-    c_space1, c_btn1, c_btn2, c_space2 = st.columns([1, 1, 1, 1])
-    with c_btn1:
-        if st.button("🏠 Dashboard"):
-            st.session_state.page = "🏠 Dashboard & Focus Station"
-            st.rerun()
-    with c_btn2:
-        if st.button("📖 Syllabus Tracker"):
-            st.session_state.page = "📖 Syllabus Tracker"
-            st.rerun()
-    
-    st.markdown("<p style='text-align: center; color: gray; font-size: 0.85rem; margin-top: 15px;'>copyright@portal</p>", unsafe_allow_html=True)
+                with sc2:
+                    if st.button("🗑️ ডিলিট", key=f"del_song_{s_idx}"):
+                        st.session_state.my_songs.pop(s_idx)
+                        save_data(SONGS_FILE, st.session_state.my_songs)
+                        st.rerun()
+                st.markdown("<hr style='border: 0.5px solid #eee;'>", unsafe_allow_html=True)
