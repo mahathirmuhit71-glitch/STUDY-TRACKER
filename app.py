@@ -38,7 +38,7 @@ def save_data(file_path, data):
     with open(file_path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
-# --- ফাইল পাথ সেটআপ (User Authentication বাদ দিয়ে সিঙ্গেল মোড) ---
+# --- ফাইল পাথ সেটআপ ---
 TASKS_FILE = os.path.join(DATA_DIR, "tasks.json")
 SYLLABUS_FILE = os.path.join(DATA_DIR, "syllabus.json")
 TIMER_FILE = os.path.join(DATA_DIR, "timer_logs.json")
@@ -198,13 +198,14 @@ remaining_days = (target_exam_date - now_bd).days
 if remaining_days < 0:
     remaining_days = 0
 
-# --- Sidebar Navigation (Authentication কোড বাদ দেওয়া হয়েছে) ---
+# --- Sidebar Navigation (সিলেবাস ট্র্যাকার এখন আলাদা মেনু হিসেবে যুক্ত) ---
 st.sidebar.title("⚡ Muhit's Workspace")
 st.sidebar.markdown("---")
 st.sidebar.markdown("**Navigation**")
 
 page_selection = [
     "🏠 Dashboard & Focus Station", 
+    "📖 Syllabus Tracker",
     "🎓 ভর্তি পরীক্ষার তারিখ",
     "📄 PDF Tool", 
     "🎵 গানের জগত"
@@ -232,8 +233,40 @@ sidebar_selection = st.sidebar.radio(
 if sidebar_selection != st.session_state.page and not st.session_state.is_focus_running:
     st.session_state.page = sidebar_selection
 
+# PDF Generator Helper for Daily Progress
+def generate_daily_pdf_report(date_str, day_name, completed_count, total_mins):
+    if not REPORTLAB_AVAILABLE:
+        return None
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    styles = getSampleStyleSheet()
+    elements = []
+    
+    elements.append(Paragraph(f"Daily Study Progress Report", styles['Title']))
+    elements.append(Paragraph(f"Date: {date_str} ({day_name})", styles['Heading2']))
+    elements.append(Spacer(1, 12))
+    
+    data = [
+        ["Metric", "Value"],
+        ["Completed 90-min Sessions", f"{completed_count} / 10"],
+        ["Total Focus Time", f"{total_mins} minutes"]
+    ]
+    t = Table(data, colWidths=[200, 200])
+    t.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#4CAF50')),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0,0), (-1,0), 8),
+        ('GRID', (0,0), (-1,-1), 1, colors.grey)
+    ]))
+    elements.append(t)
+    doc.build(elements)
+    buffer.seek(0)
+    return buffer
+
 # ----------------------------------------------------
-# PAGE 1: DASHBOARD & FOCUS STATION (with Syllabus Tracker embedded below)
+# PAGE 1: DASHBOARD & FOCUS STATION
 # ----------------------------------------------------
 if st.session_state.page == "🏠 Dashboard & Focus Station":
     st.markdown(f"""
@@ -344,7 +377,6 @@ if st.session_state.page == "🏠 Dashboard & Focus Station":
             if "focus_start_time" not in st.session_state:
                 st.session_state.focus_start_time = time.time()
             
-            # Stopwatch loop simulation
             while st.session_state.is_focus_running:
                 elapsed_seconds = int(time.time() - st.session_state.focus_start_time)
                 hours, rem = divmod(elapsed_seconds, 3600)
@@ -370,7 +402,6 @@ if st.session_state.page == "🏠 Dashboard & Focus Station":
                 st.session_state.active_focus_task = None
                 st.rerun()
 
-        # Summary of today's total focus time at the bottom of the right column
         total_today_focus = sum(log['hours_focused'] for log in st.session_state.timer_logs if log['date'] == formatted_display_date)
         st.markdown(f"#### 📊 আজ মোট ফোকাস ছিলাম: `{round(total_today_focus * 60, 1)} মিনিট`")
 
@@ -411,32 +442,54 @@ if st.session_state.page == "🏠 Dashboard & Focus Station":
         total_minutes_today = completed_count * 90
         st.markdown(f"💡 **আজকের মোট পড়া হয়েছে:** `{total_minutes_today} মিনিট`")
 
-    # --- SYLLABUS TRACKER EMBEDDED ON 1ST PAGE (MIDDLE SECTION) ---
-    st.write("---")
-    st.markdown("<h2 style='text-align: center;'>📖 Syllabus Tracker</h2>", unsafe_allow_html=True)
-    st.info("⚡ Track your chapter progress below.")
-    
-    for sub, content in st.session_state.syllabus.items():
-        with st.expander(f"📘 {sub}", expanded=False):
-            if "Chapters" in content and content["Chapters"]:
-                target_cols = get_subject_cols(sub)
-                for ch, parts in content["Chapters"].items():
-                    st.markdown(f"📍 **{ch}**")
-                    cols = st.columns(len(target_cols))
-                    for col_idx, col_name in enumerate(target_cols):
-                        with cols[col_idx]:
-                            val = parts.get(col_name, False)
-                            chk_val = st.checkbox(col_name, value=val, key=f"chk_{sub}_{ch}_{col_name}")
-                            if chk_val != val:
-                                st.session_state.syllabus[sub]["Chapters"][ch][col_name] = chk_val
-                                save_data(SYLLABUS_FILE, st.session_state.syllabus)
-                                st.rerun()
-                    st.markdown("---")
-            else:
-                st.info("No chapters mapped.")
+        # --- DAILY TARGET PDF DOWNLOAD OPTION ---
+        st.markdown("---")
+        st.markdown("#### 📥 আজকের প্রোগ্রেস পিডিএফ ডাউনলোড করুন")
+        if REPORTLAB_AVAILABLE:
+            pdf_buffer = generate_daily_pdf_report(formatted_display_date, current_day_name, completed_count, total_minutes_today)
+            if pdf_buffer:
+                st.download_button(
+                    label="📄 Download Daily Target PDF",
+                    data=pdf_buffer,
+                    file_name=f"Daily_Report_{today_date_str}.pdf",
+                    mime="application/pdf",
+                    key="download_daily_pdf"
+                )
+        else:
+            st.warning("ReportLab package not available for generating PDF.")
 
 # ----------------------------------------------------
-# PAGE 2: ADMISSION EXAM DATES TRACKER (with 4-column layout & bottom addition box)
+# PAGE 2: SYLLABUS TRACKER (SEPARATE MENU PAGE)
+# ----------------------------------------------------
+elif st.session_state.page == "📖 Syllabus Tracker":
+    if st.session_state.is_focus_running:
+        st.error("⚠️ Focus session is currently active! Complete your session first.")
+    else:
+        st.title("📖 Syllabus Tracker")
+        st.info("⚡ Track your chapter progress across subjects below.")
+        st.write("---")
+        
+        for sub, content in st.session_state.syllabus.items():
+            with st.expander(f"📘 {sub}", expanded=False):
+                if "Chapters" in content and content["Chapters"]:
+                    target_cols = get_subject_cols(sub)
+                    for ch, parts in content["Chapters"].items():
+                        st.markdown(f"📍 **{ch}**")
+                        cols = st.columns(len(target_cols))
+                        for col_idx, col_name in enumerate(target_cols):
+                            with cols[col_idx]:
+                                val = parts.get(col_name, False)
+                                chk_val = st.checkbox(col_name, value=val, key=f"chk_{sub}_{ch}_{col_name}")
+                                if chk_val != val:
+                                    st.session_state.syllabus[sub]["Chapters"][ch][col_name] = chk_val
+                                    save_data(SYLLABUS_FILE, st.session_state.syllabus)
+                                    st.rerun()
+                        st.markdown("---")
+                else:
+                    st.info("No chapters mapped.")
+
+# ----------------------------------------------------
+# PAGE 3: ADMISSION EXAM DATES TRACKER
 # ----------------------------------------------------
 elif st.session_state.page == "🎓 ভর্তি পরীক্ষার তারিখ":
     if st.session_state.is_focus_running:
@@ -450,7 +503,6 @@ elif st.session_state.page == "🎓 ভর্তি পরীক্ষার ত
         if not st.session_state.admission_exams:
             st.info("এখনো কোনো বিশ্ববিদ্যালয়ের তথ্য যোগ করা হয়নি। নিচে ফর্ম থেকে তথ্য যুক্ত করুন।")
         else:
-            # 4-Column Layout Header: University Name | Countdowns (Days left) | Exam Date | Application Start to End
             header_c1, header_c2, header_c3, header_c4 = st.columns([1.5, 1.2, 1.5, 1.8])
             header_c1.markdown("**University Name**")
             header_c2.markdown("**Countdown**")
@@ -514,7 +566,7 @@ elif st.session_state.page == "🎓 ভর্তি পরীক্ষার ত
                     st.warning("দয়া করে অন্তত University Name লিখুন।")
 
 # ----------------------------------------------------
-# PAGE 3: PDF TOOL
+# PAGE 4: PDF TOOL
 # ----------------------------------------------------
 elif st.session_state.page == "📄 PDF Tool":
     if st.session_state.is_focus_running:
@@ -581,7 +633,7 @@ elif st.session_state.page == "📄 PDF Tool":
                         st.error(f"দুঃখিত, একটি সমস্যা হয়েছে: {e}")
 
 # ----------------------------------------------------
-# PAGE 4: GANER JOGOT
+# PAGE 5: GANER JOGOT
 # ----------------------------------------------------
 elif st.session_state.page == "🎵 গানের জগত":
     if st.session_state.is_focus_running:
@@ -631,7 +683,7 @@ with mc2:
         st.rerun()
 with mc4:
     if st.button("📖 Syllabus Tracker"):
-        st.session_state.page = "🏠 Dashboard & Focus Station"
+        st.session_state.page = "📖 Syllabus Tracker"
         st.rerun()
         
 st.markdown("<p style='text-align: center; color: gray; font-size: 0.85rem; margin-top: 15px;'>@ copyright@muhit'sportal</p>", unsafe_allow_html=True)
