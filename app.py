@@ -156,7 +156,7 @@ if "is_focus_running" not in st.session_state:
 
 DAYS_OF_WEEK = ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
 
-# Bangladesh Timezone (UTC +6) strictly forced for Cloud Servers
+# Bangladesh Timezone (UTC +6)
 bd_tz = timezone(timedelta(hours=6))
 now_bd = datetime.now(bd_tz)
 
@@ -164,28 +164,48 @@ current_day_name = now_bd.strftime('%A')
 today_date_str = now_bd.strftime('%Y-%m-%d')
 formatted_display_date = now_bd.strftime('%d %B %Y')
 
-# Calculate Dynamic Countdown based on Target Date (Today Sept 5, 2026 starts with 87 days)
+# Calculate Dynamic Countdown based on Target Date
 target_exam_date = datetime(2026, 12, 1, tzinfo=bd_tz)
 remaining_days = (target_exam_date - now_bd).days
 if remaining_days < 0:
     remaining_days = 0
 
-# Sidebar Title (HSC Science Tracker removed)
+# Sidebar Navigation Control
 st.sidebar.title("⚡ Muhit's Portal")
+st.sidebar.markdown("**Navigation**")
 
-# Initialize page state
+page_selection = ["🏠 Dashboard & Focus Station", "📖 Syllabus Tracker"]
+
+def handle_nav_change():
+    if st.session_state.is_focus_running:
+        st.sidebar.error("⚠️ Be Consistent and Determined!")
+        time.sleep(1.2)
+
+# Ensure page session state exists
 if "page" not in st.session_state:
     st.session_state.page = "🏠 Dashboard & Focus Station"
+
+# Sync sidebar radio with session state cleanly
+sidebar_selection = st.sidebar.radio(
+    "Go to", 
+    page_selection, 
+    index=0 if st.session_state.page == page_selection[0] else 1, 
+    on_change=handle_nav_change,
+    key="sidebar_radio"
+)
+
+# Update session state if sidebar changes
+if sidebar_selection != st.session_state.page and not st.session_state.is_focus_running:
+    st.session_state.page = sidebar_selection
 
 # ----------------------------------------------------
 # PAGE 1: DASHBOARD & FOCUS STATION
 # ----------------------------------------------------
 if st.session_state.page == "🏠 Dashboard & Focus Station":
-    # Custom HTML Title with hidden clickable emoji link redirecting to tracker and dynamic countdown text
     st.markdown(f"""
         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
             <a href="#target-tracker" style="text-decoration: none; font-size: 32px; line-height: 1; cursor: pointer;" title="">⚡</a>
-            <h1 style="margin: 0; font-size: 2.25rem; font-weight: 700; color: #FFFFFF;">{remaining_days} days ahead (Consistent,Determined,Hardwork)</h1>
+            <h1 style="margin: 0; font-size: 2.25rem; font-weight: 700; color: #FFFFFF;">{remaining_days} days ahead (Consistent, Determined, Hardwork)</h1>
         </div>
     """, unsafe_allow_html=True)
 
@@ -270,10 +290,9 @@ if st.session_state.page == "🏠 Dashboard & Focus Station":
             st.success(f"Focused Task: {active_task['title']}")
             st.info("🔥 Fixed 25-Minute Focus Session in Progress. Stay locked in!")
             
-            # Live Countdown Loop
             timer_visual = st.empty()
             bar = st.progress(0)
-            total_seconds = 25 * 60  # Fixed 25 Minutes
+            total_seconds = 25 * 60
             study_seconds = 0
             
             for s in range(total_seconds):
@@ -303,15 +322,12 @@ if st.session_state.page == "🏠 Dashboard & Focus Station":
             st.info("💡 Click 'Focus Now' next to any task in your Daily Planner to begin your 25-minute session instantly.")
 
         st.markdown("<hr style='border: 1px solid #ccc; margin: 20px 0;'>", unsafe_allow_html=True)
-
-        # Hidden HTML Anchor target for the emoji link
         st.markdown('<div id="target-tracker"></div>', unsafe_allow_html=True)
 
         st.markdown(f"### 🎯 Daily Sessions (90-Minute Target Tracker)")
         st.markdown(f"**Day:** {current_day_name} | **Date:** {formatted_display_date}")
         st.caption("প্রতিটি সেশন ৯০ মিনিটের। আপনার পড়ার লক্ষ্য অনুযায়ী নিচে টিক দিন:")
 
-        # Auto-initialize or ensure today's key exists dynamically based on Bangladesh timezone date
         if today_date_str not in st.session_state.daily_sessions:
             st.session_state.daily_sessions[today_date_str] = {
                 "day_name": current_day_name,
