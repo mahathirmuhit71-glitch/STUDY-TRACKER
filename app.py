@@ -266,29 +266,30 @@ if st.session_state.page == "🏠 Dashboard & Focus Station":
             st.info("Vault is empty. Add tasks below.")
         else:
             for idx, task in enumerate(st.session_state.tasks):
-                t_col1, t_col2, t_col3 = st.columns([1.5, 1.5, 0.8])
+                # Compact single-line layout: [Task Title / Status] [Assign Day Dropdown] [Delete Button]
+                t_col1, t_col2, t_col3 = st.columns([2.2, 1.3, 0.9])
                 with t_col1:
                     if task.get('done', False):
-                        st.write(f"✅ {task['title']}")
+                        st.markdown(f"✅ ~~{task['title']}~~")
                     else:
-                        st.write(f"⬜ {task['title']} " + (f"(Assigned: {task['assigned_day']})" if task.get('assigned_day', 'None') != "None" else ""))
+                        st.markdown(f"📌 **{task['title']}** " + (f"<span style='font-size:0.75rem; color:gray;'>({task.get('assigned_day')})</span>" if task.get('assigned_day', 'None') != "None" else ""), unsafe_allow_html=True)
                 with t_col2:
                     current_days_list = ["None"] + DAYS_OF_WEEK
                     try:
                         current_day_idx = current_days_list.index(task.get('assigned_day', 'None'))
                     except ValueError:
                         current_day_idx = 0
-                    selected_day = st.selectbox("Assign day:", current_days_list, key=f"day_pick_{task['id']}", index=current_day_idx)
+                    selected_day = st.selectbox("Day", current_days_list, key=f"day_pick_{task['id']}", index=current_day_idx, label_visibility="collapsed")
                     if selected_day != task.get('assigned_day', 'None'):
                         task['assigned_day'] = selected_day
                         save_data(TASKS_FILE, st.session_state.tasks)
                         st.rerun()
                 with t_col3:
-                    if st.button("🗑️ Delete", key=f"del_task_{task['id']}"):
+                    if st.button("🗑️", key=f"del_task_{task['id']}", help="Delete Task"):
                         st.session_state.tasks = [t for t in st.session_state.tasks if t['id'] != task['id']]
                         save_data(TASKS_FILE, st.session_state.tasks)
-                        st.success("Task deleted!")
                         st.rerun()
+                st.markdown("<div style='margin: -10px 0;'></div>", unsafe_allow_html=True)
                         
         st.write("---")
         st.markdown("### 📅 Add Task to Weekly Vault")
@@ -638,9 +639,8 @@ elif st.session_state.page == "🎵 গানের জগত":
         st.info("তোমার পছন্দের গানগুলো নিচে সরাসরি প্লেয়ারে শুনতে পারো:")
         st.write("---")
         
-        # তোমার দেওয়া ৪টি গানের লিংক
         my_songs = [
-            "https://youtu.be/B-ISCaZ2EUw?si=vTmYZFYJ_d0zvuRt",
+            "https://youtu.be/j6FpcvSor8g",
             "https://youtu.be/iR5U92Eq-_8",
             "https://youtu.be/Agcvgc23bNc",
             "https://youtu.be/QJpfLoGMgqU"
