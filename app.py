@@ -191,7 +191,6 @@ def handle_nav_change():
         st.sidebar.error("⚠️ Be Consistent and Determined!")
         time.sleep(1.2)
 
-# Ensure page session state exists
 if "page" not in st.session_state:
     st.session_state.page = "🏠 Dashboard & Focus Station"
 
@@ -570,11 +569,85 @@ elif st.session_state.page == "🎓 ভর্তি পরীক্ষার ত
     if st.session_state.is_focus_running:
         st.error("⚠️ Focus session is currently active! Be Consistent and Determined! Complete your session first.")
     else:
-        st.title("🎓 বিশ্ববিদ্যালয় ভর্তি পরীক্ষার তারিখ ও শিডিউল")
-        st.info("⚡ এখানে বিশ্ববিদ্যালয়গুলোর নাম এবং ক্যালেন্ডার থেকে নির্দিষ্ট তারিখ (2026/2027) সিলেক্ট করে ইনপুট দিতে পারবে।")
+        st.title("🎓 ভর্তি পরীক্ষার তারিখ ও শিডিউল")
         st.write("---")
 
-        # Add New Exam Form
+        # 1. Show existing exam list first (in 4 columns view style)
+        st.markdown("#### 📋 সংরক্ষিত ভর্তি পরীক্ষার তালিকা")
+
+        if not st.session_state.admission_exams:
+            st.info("এখনো কোনো বিশ্ববিদ্যালয়ের তথ্য যোগ করা হয়নি। নিচে ফর্ম থেকে তথ্য যুক্ত করুন।")
+        else:
+            for ex in st.session_state.admission_exams:
+                e_c1, e_c2, e_c3, e_c4, e_c5 = st.columns([2, 1.5, 1.5, 1.5, 0.6])
+                with e_c1:
+                    st.markdown(f"🏛️ **{ex['University Name']}**")
+                with e_c2:
+                    st.caption(f"📝 Exam: {ex['Exam date']}")
+                with e_c3:
+                    st.caption(f"🚀 Start: {ex['1st date']}")
+                with e_c4:
+                    st.caption(f"⏳ Last: {ex['Last Date']}")
+                with e_c5:
+                    if st.button("🗑️", key=f"del_ex_{ex['id']}", help="ডিলিট করুন"):
+                        st.session_state.admission_exams = [item for item in st.session_state.admission_exams if item['id'] != ex['id']]
+                        save_data(EXAMS_FILE, st.session_state.admission_exams)
+                        st.rerun()
+                st.markdown("<div style='margin: -5px 0;'></div>", unsafe_allow_html=True)
+
+            st.write("")
+            # 2. PDF Download Button for saved admission schedule
+            if REPORTLAB_AVAILABLE:
+                def generate_admission_pdf(exams_list):
+                    buffer = BytesIO()
+                    doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
+                    story = []
+                    styles = getSampleStyleSheet()
+                    
+                    title_style = ParagraphStyle('TitleStyle', parent=styles['Heading1'], fontSize=16, textColor=colors.HexColor('#FF4B4B'), spaceAfter=15, alignment=1)
+                    cell_style = ParagraphStyle('CellStyle', parent=styles['Normal'], fontSize=9, leading=13, textColor=colors.HexColor('#222222'))
+                    header_style = ParagraphStyle('HeaderStyle', parent=styles['Normal'], fontSize=10, leading=13, fontName='Helvetica-Bold', textColor=colors.whitesmoke)
+                    
+                    story.append(Paragraph("Admission Exam Schedule Report - Muhit", title_style))
+                    story.append(Spacer(1, 10))
+                    
+                    table_content = [[Paragraph("University Name", header_style), Paragraph("Exam Date", header_style), Paragraph("1st Date (Start)", header_style), Paragraph("Last Date (Deadline)", header_style)]]
+                    for ex in exams_list:
+                        u_para = Paragraph(str(ex['University Name']), cell_style)
+                        e_para = Paragraph(str(ex['Exam date']), cell_style)
+                        f_para = Paragraph(str(ex['1st date']), cell_style)
+                        l_para = Paragraph(str(ex['Last Date']), cell_style)
+                        table_content.append([u_para, e_para, f_para, l_para])
+                        
+                    pdf_table = Table(table_content, colWidths=[150, 110, 120, 120])
+                    pdf_table.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2E2E2E')),
+                        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+                        ('TOPPADDING', (0, 0), (-1, 0), 8),
+                        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#F9F9F9')),
+                        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CCCCCC')),
+                        ('TOPPADDING', (0, 1), (-1, -1), 6),
+                        ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+                    ]))
+                    story.append(pdf_table)
+                    doc.build(story)
+                    buffer.seek(0)
+                    return buffer.getvalue()
+
+                admission_pdf_bytes = generate_admission_pdf(st.session_state.admission_exams)
+                st.download_button(
+                    label="📥 Download Admission Schedule PDF",
+                    data=admission_pdf_bytes,
+                    file_name="admission_schedule_muhit.pdf",
+                    mime="application/pdf",
+                    key="dl_admission_pdf"
+                )
+
+        st.write("---")
+
+        # 3. Add New Exam Form at the very end
         with st.form("admission_exam_form", clear_on_submit=True):
             st.markdown("#### ➕ নতুন ভর্তি পরীক্ষার তথ্য যোগ করুন")
             f_col1, f_col2 = st.columns(2)
@@ -601,30 +674,6 @@ elif st.session_state.page == "🎓 ভর্তি পরীক্ষার ত
                     st.rerun()
                 else:
                     st.warning("দয়া করে অন্তত University Name লিখুন।")
-
-        st.write("---")
-        st.markdown("#### 📋 সংরক্ষিত ভর্তি পরীক্ষার তালিকা")
-
-        if not st.session_state.admission_exams:
-            st.info("এখনো কোনো বিশ্ববিদ্যালয়ের তথ্য যোগ করা হয়নি। উপরের ফর্ম থেকে তথ্য যুক্ত করুন।")
-        else:
-            # Display list with delete options
-            for ex in st.session_state.admission_exams:
-                e_c1, e_c2, e_c3, e_c4, e_c5 = st.columns([2, 1.5, 1.5, 1.5, 0.6])
-                with e_c1:
-                    st.markdown(f"🏛️ **{ex['University Name']}**")
-                with e_c2:
-                    st.caption(f"📝 Exam: {ex['Exam date']}")
-                with e_c3:
-                    st.caption(f"🚀 Start: {ex['1st date']}")
-                with e_c4:
-                    st.caption(f"⏳ Last: {ex['Last Date']}")
-                with e_c5:
-                    if st.button("🗑️", key=f"del_ex_{ex['id']}", help="ডিলিট করুন"):
-                        st.session_state.admission_exams = [item for item in st.session_state.admission_exams if item['id'] != ex['id']]
-                        save_data(EXAMS_FILE, st.session_state.admission_exams)
-                        st.rerun()
-                st.markdown("<div style='margin: -5px 0;'></div>", unsafe_allow_html=True)
 
 # ----------------------------------------------------
 # PAGE 4: PDF TOOL (2-in-1 Auto-Layout Tool)
@@ -694,7 +743,7 @@ elif st.session_state.page == "📄 PDF Tool":
                         st.error(f"দুঃখিত, একটি সমস্যা হয়েছে: {e}")
 
 # ----------------------------------------------------
-# PAGE 5: GANER JOGOT (Custom Songs Added)
+# PAGE 5: GANER JOGOT
 # ----------------------------------------------------
 elif st.session_state.page == "🎵 গানের জগত":
     if st.session_state.is_focus_running:
@@ -705,10 +754,11 @@ elif st.session_state.page == "🎵 গানের জগত":
         st.write("---")
         
         my_songs = [
-            "https://youtu.be/j6FpcvSor8g",
+            "https://youtu.be/B-ISCaZ2EUw?si=LHSLxrwL8gqv48SE",
             "https://youtu.be/iR5U92Eq-_8",
             "https://youtu.be/Agcvgc23bNc",
-            "https://youtu.be/QJpfLoGMgqU"
+            "https://youtu.be/QJpfLoGMgqU",
+            "https://youtu.be/aar0oGrJcDM?si=wRRJLEnHo4-dMa3j"
         ]
         
         for idx, song_url in enumerate(my_songs, 1):
