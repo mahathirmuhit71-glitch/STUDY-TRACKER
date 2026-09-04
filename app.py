@@ -784,3 +784,254 @@ elif st.session_state.page == "🎵 গানের জগত":
                 save_data(SONGS_FILE, st.session_state.my_songs)
                 st.success("গান সফলভাবে যোগ করা হয়েছে!")
                 st.rerun()
+import json
+import os
+from datetime import datetime, date
+import streamlit as st
+import pandas as pd
+
+# ডেটা সেভ করার জন্য ফাইলের নাম
+DATA_FILE = "admission_schedule.json"
+
+# পেজ কনফিগারেশন
+st.set_page_config(page_title="Muhit's HSC Tracker & Workspace", layout="wide")
+
+# কাস্টম CSS ও জাভাস্ক্রিপ্ট (ট্যাব পরিবর্তন বা ফোকাস লসের সতর্কতা এবং ফুটারের জন্য)
+st.markdown("""
+    <style>
+    .footer {
+        position: fixed;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        background-color: transparent;
+        color: #888888;
+        text-align: center;
+        font-size: 14px;
+        z-index: 100;
+        padding: 10px;
+    }
+    </style>
+    <script>
+    // ট্যাব পরিবর্তন ট্র্যাক করার স্ক্রিপ্ট
+    let switchCount = parseInt(sessionStorage.getItem("tab_switches") || "0");
+    document.addEventListener("visibilitychange", function() {
+        if (document.hidden) {
+            switchCount++;
+            sessionStorage.setItem("tab_switches", switchCount);
+            alert("⚠️ Stay focused, Consistent, determined and hardwork!");
+        }
+    });
+    </script>
+""", unsafe_allow_html=True)
+
+# ----------------- ডাটা ম্যানেজমেন্ট ফাংশন -----------------
+def load_data():
+    if os.path.exists(DATA_FILE):
+        try:
+            with open(DATA_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    
+    # ডিফল্ট শিডিউল ডাটা
+    return [
+        {
+            "University Name": "DU",
+            "Exam Date": "2026-12-12",
+            "Start Date": "2026-11-11",
+            "Last Date": "2026-11-25"
+        },
+        {
+            "University Name": "KUET",
+            "Exam Date": "2027-01-07",
+            "Start Date": "2026-09-05",
+            "Last Date": "2026-09-05"
+        },
+        {
+            "University Name": "SUST",
+            "Exam Date": "2027-01-26",
+            "Start Date": "2026-09-05",
+            "Last Date": "2026-09-05"
+        },
+        {
+            "University Name": "MIST",
+            "Exam Date": "2026-12-18",
+            "Start Date": "2026-09-05",
+            "Last Date": "2026-09-05"
+        },
+        {
+            "University Name": "KU",
+            "Exam Date": "2026-12-18",
+            "Start Date": "2026-09-05",
+            "Last Date": "2026-09-05"
+        },
+        {
+            "University Name": "Jagannath",
+            "Exam Date": "2027-01-01",
+            "Start Date": "2026-11-15",
+            "Last Date": "2026-09-10"
+        },
+        {
+            "University Name": "Chattogram Uni",
+            "Exam Date": "2027-01-30",
+            "Start Date": "2026-11-15",
+            "Last Date": "2026-12-10"
+        },
+        {
+            "University Name": "RAJSHAHI",
+            "Exam Date": "2027-01-09",
+            "Start Date": "2026-11-12",
+            "Last Date": "2026-11-27"
+        },
+        {
+            "University Name": "BUP",
+            "Exam Date": "2026-01-08",
+            "Start Date": "2026-09-05",
+            "Last Date": "2026-09-05"
+        }
+    ]
+
+def save_data(data):
+    with open(DATA_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=4, ensure_ascii=False)
+
+# Session State Initialization
+if "schedule_data" not in st.session_state:
+    st.session_state.schedule_data = load_data()
+
+if "focus_seconds" not in st.session_state:
+    st.session_state.focus_seconds = 0
+
+if "is_focusing" not in st.session_state:
+    st.session_state.is_focusing = False
+
+# ----------------- Main Header & Navigation -----------------
+st.title("🎓 Muhit's HSC Tracker & Workspace")
+
+# পেজ সিলেকশন মেনু
+page = st.selectbox(
+    "🧭 Navigation Menu", 
+    ["Dashboard & Focus Arena", "Admission Schedule", "Syllabus Tracker", "PDF Tools & Music World"]
+)
+
+st.markdown("---")
+
+# ----------------- 1. DASHBOARD & FOCUS ARENA -----------------
+if page == "Dashboard & Focus Arena":
+    st.subheader("⚡ Focus Arena (Stopwatch Mode)")
+    st.info("💡 নিয়ম: এখানে স্টপওয়াচ অন করে পড়ালেখা করুন। অন্য ট্যাবে গেলে ওয়ার্নিং পপআপ আসবে এবং ব্যাকগ্রাউন্ডে ট্যাব পরিবর্তনের কাউন্ট ট্র্যাক হবে।")
+
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if st.button("▶ Start Stopwatch"):
+            st.session_state.is_focusing = True
+    with col2:
+        if st.button("⏹ Stop & Save Session"):
+            st.session_state.is_focusing = False
+    with col3:
+        if st.button("🔄 Reset Timer"):
+            st.session_state.focus_seconds = 0
+            st.session_state.is_focusing = False
+
+    # স্টপওয়াচ রান করলে কাউন্ট বাড়াতে থাকবে
+    if st.session_state.is_focusing:
+        st.success("🔥 Focus Stopwatch is Running... Stay consistent!")
+        st.session_state.focus_seconds += 5  # প্রতি রিফ্রেশ সাইকেলে ৫ সেকেন্ড যোগ হবে
+        st.rerun()
+
+    # আজকের মোট ফোকাস হিসাব প্রদর্শন
+    total_min = st.session_state.focus_seconds // 60
+    total_sec = st.session_state.focus_seconds % 60
+    st.metric(label="⏱️ আজ মোট ফোকাস ছিলে", value=f"{total_min} মিনিট {total_sec} সেকেন্ড")
+
+# ----------------- 2. ADMISSION SCHEDULE -----------------
+elif page == "Admission Schedule":
+    st.subheader("📋 University Admission Schedule & Countdowns")
+
+    # আগে সেভ করা ডাটাগুলো উপরে টেবিল আকারে শো করা
+    display_list = []
+    today = date.today()
+
+    for item in st.session_state.schedule_data:
+        try:
+            exam_date_obj = datetime.strptime(item["Exam Date"], "%Y-%m-%d").date()
+            days_left = (exam_date_obj - today).days
+            countdown_str = f"{days_left} days left" if days_left >= 0 else "Exam Completed"
+        except Exception:
+            countdown_str = "Invalid Date"
+
+        display_list.append({
+            "University Name": item["University Name"],
+            "Countdowns": countdown_str,
+            "Exam Date": item["Exam Date"],
+            "Application Start Date": item["Start Date"],
+            "Application Last Date": item["Last Date"]
+        })
+
+    df = pd.DataFrame(display_list)
+    st.dataframe(df, use_container_width=True)
+
+    st.markdown("---")
+    st.subheader("➕ Add New Admission Schedule (Bottom Box)")
+
+    # সবার নিচে নতুন শিডিউল যোগ করার বক্স/ফর্ম
+    with st.form("add_schedule_form", clear_on_submit=True):
+        col1, col2 = st.columns(2)
+        with col1:
+            uni_name = st.text_input("University Name")
+            exam_date = st.date_input("Exam Date")
+        with col2:
+            start_date = st.date_input("Application Start Date")
+            last_date = st.date_input("Application Last Date")
+        
+        submitted = st.form_submit_button("Save Schedule")
+        
+        if submitted:
+            if uni_name:
+                new_entry = {
+                    "University Name": uni_name,
+                    "Exam Date": str(exam_date),
+                    "Start Date": str(start_date),
+                    "Last Date": str(last_date)
+                }
+                st.session_state.schedule_data.append(new_entry)
+                save_data(st.session_state.schedule_data)
+                st.success(f"Successfully added schedule for {uni_name}!")
+                st.rerun()
+            else:
+                st.error("Please enter the University Name.")
+
+# ----------------- 3. SYLLABUS TRACKER -----------------
+elif page == "Syllabus Tracker":
+    st.subheader("📚 HSC Syllabus Tracker")
+    st.write("আপনার সাবজেক্টওয়াইজ পড়ালেখার প্রোগ্রেস এখানে দেখতে এবং ট্র্যাক করতে পারবেন।")
+    
+    subjects = ["Physics", "Chemistry", "Higher Math", "Biology", "ICT"]
+    for sub in subjects:
+        with st.expander(f"📘 {sub} Syllabus"):
+            st.checkbox(f"Chapter 1 - {sub} Completed")
+            st.checkbox(f"Chapter 2 - {sub} Completed")
+            st.checkbox(f"Chapter 3 - {sub} Completed")
+
+# ----------------- 4. PDF TOOLS & MUSIC WORLD -----------------
+elif page == "PDF Tools & Music World":
+    st.subheader("🛠️ PDF Tools & 🎶 Ganer Jogot")
+    
+    tab1, tab2 = st.tabs(["PDF Tools", "Ganer Jogot"])
+    
+    with tab1:
+        st.write("এখানে আপনার প্রয়োজনীয় পিডিএফ ফাইল ম্যানেজ বা লেআউট ঠিক করতে পারবেন।")
+        st.file_uploader("Upload PDF file", type=["pdf"])
+        
+    with tab2:
+        st.write("পড়ার ফাঁকে রিলাক্স করার জন্য পছন্দের মিউজিক বা গানের লিংক।")
+        st.markdown("[🎵 Lo-Fi Beats Playlist](https://www.youtube.com)")
+
+# ----------------- Footer (All Pages) -----------------
+st.markdown("""
+    <div class="footer">
+        <p>@ copyright @muhit's portal</p>
+    </div>
+""", unsafe_allow_html=True)
