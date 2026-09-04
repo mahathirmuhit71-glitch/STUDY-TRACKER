@@ -30,6 +30,7 @@ TASKS_FILE = os.path.join(DATA_DIR, "tasks.json")
 SYLLABUS_FILE = os.path.join(DATA_DIR, "syllabus.json")
 TIMER_FILE = os.path.join(DATA_DIR, "timer_logs.json")
 DAILY_SESSIONS_FILE = os.path.join(DATA_DIR, "daily_sessions.json")
+EXAMS_FILE = os.path.join(DATA_DIR, "admission_exams.json")
 
 def load_data(file_path, default_val):
     if os.path.exists(file_path):
@@ -47,6 +48,7 @@ def save_data(file_path, data):
 # Initialize Session States & Database Setup
 st.session_state.tasks = load_data(TASKS_FILE, [])
 st.session_state.daily_sessions = load_data(DAILY_SESSIONS_FILE, {})
+st.session_state.admission_exams = load_data(EXAMS_FILE, [])
 
 # Checklist Columns Definition for Different Subjects
 CHECKBOX_COLUMNS = ["Class", "Master Book", "Concept Book", "Short Note", "Book Reading", "VAP Master Bank"]
@@ -179,6 +181,7 @@ st.sidebar.markdown("**Navigation**")
 page_selection = [
     "🏠 Dashboard & Focus Station", 
     "📖 Syllabus Tracker", 
+    "🎓 ভর্তি পরীক্ষার তারিখ",
     "📄 PDF Tool", 
     "🎵 গানের জগত"
 ]
@@ -266,7 +269,6 @@ if st.session_state.page == "🏠 Dashboard & Focus Station":
             st.info("Vault is empty. Add tasks below.")
         else:
             for idx, task in enumerate(st.session_state.tasks):
-                # Compact single-line layout: [Task Title / Status] [Assign Day Dropdown] [Delete Button]
                 t_col1, t_col2, t_col3 = st.columns([2.2, 1.3, 0.9])
                 with t_col1:
                     if task.get('done', False):
@@ -442,7 +444,7 @@ if st.session_state.page == "🏠 Dashboard & Focus Station":
             st.warning("ReportLab library is not installed.")
 
 # ----------------------------------------------------
-# PAGE 2: SYLLABUS TRACKER & INTEGRATED PDF REPORTS
+# PAGE 2: SYLLABUS TRACKER
 # ----------------------------------------------------
 elif st.session_state.page == "📖 Syllabus Tracker":
     if st.session_state.is_focus_running:
@@ -562,7 +564,70 @@ elif st.session_state.page == "📖 Syllabus Tracker":
                     st.info(f"No chapters completed yet for '{sub_name}'. Check off items above to generate your report and PDF.")
 
 # ----------------------------------------------------
-# PAGE 3: PDF TOOL (2-in-1 Auto-Layout Tool)
+# PAGE 3: ADMISSION EXAM DATES TRACKER
+# ----------------------------------------------------
+elif st.session_state.page == "🎓 ভর্তি পরীক্ষার তারিখ":
+    if st.session_state.is_focus_running:
+        st.error("⚠️ Focus session is currently active! Be Consistent and Determined! Complete your session first.")
+    else:
+        st.title("🎓 বিশ্ববিদ্যালয় ভর্তি পরীক্ষার তারিখ ও শিডিউল")
+        st.info("⚡ এখানে বিশ্ববিদ্যালয়গুলোর নাম এবং ক্যালেন্ডার থেকে নির্দিষ্ট তারিখ (2026/2027) সিলেক্ট করে ইনপুট দিতে পারবে।")
+        st.write("---")
+
+        # Add New Exam Form
+        with st.form("admission_exam_form", clear_on_submit=True):
+            st.markdown("#### ➕ নতুন ভর্তি পরীক্ষার তথ্য যোগ করুন")
+            f_col1, f_col2 = st.columns(2)
+            with f_col1:
+                uni_name_input = st.text_input("University Name (যেমন: Dhaka University / BUET)")
+                exam_date_input = st.date_input("Exam Date", value=now_bd.date(), min_value=datetime(2026, 1, 1).date(), max_value=datetime(2027, 12, 31).date())
+            with f_col2:
+                first_date_input = st.date_input("1st Date (Application Start)", value=now_bd.date(), min_value=datetime(2026, 1, 1).date(), max_value=datetime(2027, 12, 31).date())
+                last_date_input = st.date_input("Last Date (Application Deadline)", value=now_bd.date(), min_value=datetime(2026, 1, 1).date(), max_value=datetime(2027, 12, 31).date())
+            
+            submit_exam = st.form_submit_button("💾 সেভ করুন")
+            if submit_exam:
+                if uni_name_input:
+                    new_exam_entry = {
+                        "id": str(int(time.time() * 1000)),
+                        "University Name": uni_name_input,
+                        "Exam date": exam_date_input.strftime("%d %B, %Y"),
+                        "1st date": first_date_input.strftime("%d %B, %Y"),
+                        "Last Date": last_date_input.strftime("%d %B, %Y")
+                    }
+                    st.session_state.admission_exams.append(new_exam_entry)
+                    save_data(EXAMS_FILE, st.session_state.admission_exams)
+                    st.success("সফলভাবে ভর্তি পরীক্ষার তথ্য সংরক্ষণ করা হয়েছে!")
+                    st.rerun()
+                else:
+                    st.warning("দয়া করে অন্তত University Name লিখুন।")
+
+        st.write("---")
+        st.markdown("#### 📋 সংরক্ষিত ভর্তি পরীক্ষার তালিকা")
+
+        if not st.session_state.admission_exams:
+            st.info("এখনো কোনো বিশ্ববিদ্যালয়ের তথ্য যোগ করা হয়নি। উপরের ফর্ম থেকে তথ্য যুক্ত করুন।")
+        else:
+            # Display list with delete options
+            for ex in st.session_state.admission_exams:
+                e_c1, e_c2, e_c3, e_c4, e_c5 = st.columns([2, 1.5, 1.5, 1.5, 0.6])
+                with e_c1:
+                    st.markdown(f"🏛️ **{ex['University Name']}**")
+                with e_c2:
+                    st.caption(f"📝 Exam: {ex['Exam date']}")
+                with e_c3:
+                    st.caption(f"🚀 Start: {ex['1st date']}")
+                with e_c4:
+                    st.caption(f"⏳ Last: {ex['Last Date']}")
+                with e_c5:
+                    if st.button("🗑️", key=f"del_ex_{ex['id']}", help="ডিলিট করুন"):
+                        st.session_state.admission_exams = [item for item in st.session_state.admission_exams if item['id'] != ex['id']]
+                        save_data(EXAMS_FILE, st.session_state.admission_exams)
+                        st.rerun()
+                st.markdown("<div style='margin: -5px 0;'></div>", unsafe_allow_html=True)
+
+# ----------------------------------------------------
+# PAGE 4: PDF TOOL (2-in-1 Auto-Layout Tool)
 # ----------------------------------------------------
 elif st.session_state.page == "📄 PDF Tool":
     if st.session_state.is_focus_running:
@@ -629,7 +694,7 @@ elif st.session_state.page == "📄 PDF Tool":
                         st.error(f"দুঃখিত, একটি সমস্যা হয়েছে: {e}")
 
 # ----------------------------------------------------
-# PAGE 4: GANER JOGOT (Custom Songs Added)
+# PAGE 5: GANER JOGOT (Custom Songs Added)
 # ----------------------------------------------------
 elif st.session_state.page == "🎵 গানের জগত":
     if st.session_state.is_focus_running:
@@ -655,7 +720,7 @@ elif st.session_state.page == "🎵 গানের জগত":
             st.markdown("---")
 
 # Footer & Navigation buttons for main pages
-if st.session_state.page in ["🏠 Dashboard & Focus Station", "📖 Syllabus Tracker", "📄 PDF Tool"]:
+if st.session_state.page in ["🏠 Dashboard & Focus Station", "📖 Syllabus Tracker", "🎓 ভর্তি পরীক্ষার তারিখ", "📄 PDF Tool"]:
     st.markdown("<br><hr style='border: 1px solid #ddd;'>", unsafe_allow_html=True)
     c_space1, c_btn1, c_btn2, c_space2 = st.columns([1, 1, 1, 1])
     with c_btn1:
