@@ -42,7 +42,9 @@ def load_data(file_path, default_val):
     if os.path.exists(file_path):
         try:
             with open(file_path, "r", encoding="utf-8") as f:
-                return json.load(f)
+                content = json.load(f)
+                if content is not None:
+                    return content
         except:
             return default_val
     return default_val
@@ -66,7 +68,7 @@ DAILY_SESSIONS_FILE = os.path.join(user_folder, "daily_sessions.json")
 EXAMS_FILE = os.path.join(user_folder, "admission_exams.json")
 SONGS_FILE = os.path.join(user_folder, "songs.json")
 
-# Initialize Session States & Database Setup
+# Initialize Session States safely with persistent files
 st.session_state.tasks = load_data(TASKS_FILE, [])
 st.session_state.daily_sessions = load_data(DAILY_SESSIONS_FILE, {})
 st.session_state.admission_exams = load_data(EXAMS_FILE, [])
@@ -183,13 +185,12 @@ def get_subject_cols(sub_name):
         return MATH_COLUMNS
     return CHECKBOX_COLUMNS
 
-# সিলেবাস ডেটা লোড এবং পারফেক্ট সিঙ্ক নিশ্চিতকরণ
+# সিলেবাস ডেটা নিরাপদে সিঙ্ক করা
 saved_syllabus = load_data(SYLLABUS_FILE, {})
 if not saved_syllabus:
     st.session_state.syllabus = HSC_DEFAULT_SYLLABUS
     save_data(SYLLABUS_FILE, HSC_DEFAULT_SYLLABUS)
 else:
-    # ডিফল্ট সিলেবাসের সবগুলো সাবজেক্ট এবং চ্যাপ্টার চেক করে না থাকলে যুক্ত করে দেওয়া
     updated = False
     for sub, content in HSC_DEFAULT_SYLLABUS.items():
         if sub not in saved_syllabus:
@@ -680,16 +681,16 @@ elif st.session_state.page == "🎓 ভর্তি পরীক্ষার ত
                 st.markdown("<hr style='border: 0.5px solid #ddd;'>", unsafe_allow_html=True)
 
 # ----------------------------------------------------
-# PAGE 4: PDF TOOL
+# PAGE 4: PDF TOOL (ORIGINAL UTILITIES RESTORED)
 # ----------------------------------------------------
 elif st.session_state.page == "📄 PDF Tool":
     if st.session_state.is_focus_running:
         st.error("⚠️ Focus session is currently active! Be Consistent and Determined! Complete your session first.")
     else:
-        st.title("📄 PDF Merger & Splitter Utility")
-        st.info("আপনার স্টাডি নোটস বা বইয়ের পিডিএফ ফাইলগুলো এক করতে অথবা আলাদা করতে নিচের টুলটি ব্যবহার করুন।")
+        st.title("📄 PDF Power Utilities & Tools")
+        st.info("আপনার স্টাডি নোটস বা বইয়ের পিডিএফ ফাইলগুলো মার্জ, স্প্লিট, পেজ রিঅর্ডার বা প্রটেক্ট করতে নিচের ইউটিলিটিগুলো ব্যবহার করুন।")
         
-        pdf_tab1, pdf_tab2 = st.tabs(["🔗 Merge PDFs", "✂️ Split PDF"])
+        pdf_tab1, pdf_tab2, pdf_tab3, pdf_tab4 = st.tabs(["🔗 Merge PDFs", "✂️ Split PDF", "🔄 Reorder Pages", "🔒 Protect/Unlock PDF"])
         
         with pdf_tab1:
             st.markdown("#### একাধিক পিডিএফ ফাইল একসাথে যুক্ত করুন")
@@ -746,8 +747,72 @@ elif st.session_state.page == "📄 PDF Tool":
                     else:
                         st.error("শুরু পেজ শেষ পেজের চেয়ে বড় হতে পারবে না!")
 
+        with pdf_tab3:
+            st.markdown("#### পিডিএফ পেজের ক্রম পরিবর্তন করুন (Reorder)")
+            reorder_file = st.file_uploader("একটি PDF ফাইল আপলোড করুন (Reorder-এর জন্য)", type=["pdf"], key="reorder_uploader")
+            if reorder_file:
+                reader = PdfReader(reorder_file)
+                total_pages = len(reader.pages)
+                st.info(f"মোট পেজ: {total_pages} টি। কমা দিয়ে পেজ নম্বরগুলো আপনার পছন্দমতো সাজান (যেমন: 3, 1, 2, 4)।")
+                
+                default_order_str = ", ".join([str(i) for i in range(1, total_pages + 1)])
+                order_input = st.text_input("নতুন পেজ অর্ডার দিন:", value=default_order_str)
+                
+                if st.button("🔄 Reorder Pages Now"):
+                    try:
+                        pages_list = [int(p.strip()) - 1 for p in order_input.split(",")]
+                        if all(0 <= p < total_pages for p in pages_list):
+                            writer = PdfWriter()
+                            for p_idx in pages_list:
+                                writer.add_page(reader.pages[p_idx])
+                            
+                            reorder_output = BytesIO()
+                            writer.write(reorder_output)
+                            writer.close()
+                            reorder_output.seek(0)
+                            
+                            st.success("পিডিএফ পেজ সফলভাবে রিঅর্ডার করা হয়েছে!")
+                            st.download_button(
+                                label="📥 Download Reordered PDF",
+                                data=reorder_output,
+                                file_name="reordered_document.pdf",
+                                mime="application/pdf"
+                            )
+                        else:
+                            st.error(f"দয়া করে ১ থেকে {total_pages} এর মধ্যে সঠিক পেজ নম্বর দিন।")
+                    except Exception as e:
+                        st.error("ইনপুট ফরম্যাট ভুল হয়েছে। কমা দিয়ে শুধু সঠিক নম্বর দিন (যেমন: 1, 2, 3)।")
+
+        with pdf_tab4:
+            st.markdown("#### পিডিএফ ফাইল পাসওয়ার্ড দিয়ে প্রটেক্ট করুন")
+            protect_file = st.file_uploader("একটি PDF ফাইল আপলোড করুন (Protection-এর জন্য)", type=["pdf"], key="protect_uploader")
+            if protect_file:
+                pdf_password = st.text_input("নতুন পাসওয়ার্ড দিন (Password):", type="password")
+                if st.button("🔒 Encrypt & Protect PDF"):
+                    if pdf_password:
+                        reader = PdfReader(protect_file)
+                        writer = PdfWriter()
+                        for page in reader.pages:
+                            writer.add_page(page)
+                        writer.encrypt(pdf_password)
+                        
+                        prot_output = BytesIO()
+                        writer.write(prot_output)
+                        writer.close()
+                        prot_output.seek(0)
+                        
+                        st.success("পিডিএফ সফলভাবে পাসওয়ার্ড প্রটেক্টেড করা হয়েছে!")
+                        st.download_button(
+                            label="📥 Download Protected PDF",
+                            data=prot_output,
+                            file_name="protected_document.pdf",
+                            mime="application/pdf"
+                        )
+                    else:
+                        st.warning("দয়া করে একটি পাসওয়ার্ড দিন।")
+
 # ----------------------------------------------------
-# PAGE 5: SONGS WORLD
+# PAGE 5: SONGS WORLD (ADD SONG FORM MOVED TO BOTTOM)
 # ----------------------------------------------------
 elif st.session_state.page == "🎵 গানের জগত":
     if st.session_state.is_focus_running:
@@ -756,19 +821,9 @@ elif st.session_state.page == "🎵 গানের জগত":
         st.title("🎵 গানের জগত & ফোকাস মিউজিক")
         st.info("পড়ার সময় ফোকাস ধরে রাখতে বা রিলাক্স করতে আপনার পছন্দের ইউটিউব গানগুলো এখানে শুনতে পারেন।")
 
-        with st.form("song_add_form", clear_on_submit=True):
-            new_song_url = st.text_input("নতুন ইউটিউব গানের লিংক দিন (YouTube URL):")
-            submit_song = st.form_submit_button("➕ গান লিস্টে যোগ করুন")
-            if submit_song and new_song_url:
-                st.session_state.my_songs.append(new_song_url)
-                save_data(SONGS_FILE, st.session_state.my_songs)
-                st.success("গান সফলভাবে যোগ করা হয়েছে!")
-                st.rerun()
-
-        st.write("---")
         st.subheader("🎧 আপনার প্লেলিস্ট")
         if not st.session_state.my_songs:
-            st.info("প্লেলিস্টে কোনো গান নেই। উপর থেকে গান যোগ করুন।")
+            st.info("প্লেলিস্টে কোনো গান নেই। নিচে থেকে নতুন গান যোগ করুন।")
         else:
             for s_idx, song_url in enumerate(st.session_state.my_songs):
                 sc1, sc2 = st.columns([4, 1])
@@ -780,3 +835,14 @@ elif st.session_state.page == "🎵 গানের জগত":
                         save_data(SONGS_FILE, st.session_state.my_songs)
                         st.rerun()
                 st.markdown("<hr style='border: 0.5px solid #eee;'>", unsafe_allow_html=True)
+
+        st.write("---")
+        st.subheader("➕ নতুন গান যোগ করুন")
+        with st.form("song_add_form", clear_on_submit=True):
+            new_song_url = st.text_input("নতুন ইউটিউব গানের লিংক দিন (YouTube URL):")
+            submit_song = st.form_submit_button("➕ গান লিস্টে যোগ করুন")
+            if submit_song and new_song_url:
+                st.session_state.my_songs.append(new_song_url)
+                save_data(SONGS_FILE, st.session_state.my_songs)
+                st.success("গান সফলভাবে যোগ করা হয়েছে!")
+                st.rerun()
