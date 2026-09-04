@@ -1,6 +1,6 @@
-import streamlit as str_module
 import streamlit as st
 import streamlit_authenticator as stauth
+from streamlit_authenticator.utilities.hasher import Hasher
 import pandas as pd
 import json
 import os
@@ -47,12 +47,12 @@ def get_user_data_dir(current_username):
     return user_dir
 
 # --- MULTI-USER AUTHENTICATION CONFIG ---
-# এখানে তুমি চাইলে নতুন ইউজার এবং পাসওয়ার্ড যোগ করতে পারো
 names = ['Mahathir Muhit', 'Friend User']
 usernames = ['muhit', 'friend']
-passwords = ['12345', 'abcde'] # প্রত্যেকের আলাদা পাসওয়ার্ড
+passwords = ['12345', 'abcde']
 
-hashed_passwords = stauth.Hasher(passwords).generate()
+# লেটেস্ট ভার্সনের জন্য সঠিক নিয়মে পাসওয়ার্ড হাশ করা
+hashed_passwords = Hasher(passwords).generate()
 
 credentials = {
     'usernames': {}
