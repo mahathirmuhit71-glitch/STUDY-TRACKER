@@ -1093,6 +1093,7 @@ if st.session_state.page == "🏠 Dashboard & Focus Station":
                         ">
                             FOCUS TIME
                         </div>
+
                         <div style="
                             color:#00FF88;
                             font-size:48px;
@@ -1106,39 +1107,68 @@ if st.session_state.page == "🏠 Dashboard & Focus Station":
                 unsafe_allow_html=True
             )
 
-            b_col1, b_col2, b_col3 = st.columns(3)
+            # =================================================
+            # PAUSE / RESUME / STOP
+            # =================================================
+            b1, b2 = st.columns(2)
 
-            with b_col1:
+            with b1:
 
-                if st.session_state.focus_paused:
+                if not st.session_state.focus_paused:
 
-                    if st.button("▶️ Resume"):
-
-                        st.session_state.focus_started_at = time.time()
-                        st.session_state.focus_paused = False
-
-                        st.rerun()
-
-                else:
-
-                    if st.button("⏸️ Pause"):
+                    if st.button(
+                        "⏸️ Pause",
+                        use_container_width=True
+                    ):
 
                         st.session_state.focus_elapsed_before = elapsed
                         st.session_state.focus_paused = True
 
                         st.rerun()
 
-            with b_col2:
+                else:
 
-                if st.button("✅ Finish"):
+                    if st.button(
+                        "▶️ Resume",
+                        use_container_width=True
+                    ):
 
-                    hours_spent = round(elapsed / 3600, 2)
+                        st.session_state.focus_started_at = time.time()
+                        st.session_state.focus_paused = False
 
-                    # Update task in tasks list
+                        st.rerun()
+
+            with b2:
+
+                if st.button(
+                    "⏹️ Stop & Save",
+                    use_container_width=True
+                ):
+
+                    final_elapsed = elapsed
+
+                    final_hours = round(
+                        final_elapsed / 3600,
+                        4
+                    )
+
                     for t in st.session_state.tasks:
-                        if t["id"] == active_task["id"]:
-                            t["done"] = True
-                            t["hours_done"] = t.get("hours_done", 0.0) + hours_spent
+
+                        if (
+                            t["id"]
+                            == active_task["id"]
+                        ):
+
+                            t["hours_done"] = round(
+                                float(
+                                    t.get(
+                                        "hours_done",
+                                        0
+                                    )
+                                )
+                                + final_hours,
+                                4
+                            )
 
                     permanent_save(
                         "tasks",
@@ -1146,13 +1176,15 @@ if st.session_state.page == "🏠 Dashboard & Focus Station":
                         st.session_state.tasks
                     )
 
-                    # Log session
-                    log_entry = {
-                        "date": today_date_str,
-                        "task": active_task["title"],
-                        "hours": hours_spent
-                    }
-                    st.session_state.timer_logs.append(log_entry)
+                    st.session_state.timer_logs.append(
+                        {
+                            "date": formatted_display_date,
+                            "task_title": active_task["title"],
+                            "hours_focused": final_hours,
+                            "seconds_focused": final_elapsed
+                        }
+                    )
+
                     permanent_save(
                         "timer_logs",
                         TIMER_FILE,
@@ -1165,31 +1197,382 @@ if st.session_state.page == "🏠 Dashboard & Focus Station":
                     st.session_state.focus_elapsed_before = 0
                     st.session_state.focus_paused = False
 
-                    st.success("🎉 Focus session completed and logged!")
-                    time.sleep(1)
+                    st.success(
+                        f"🎉 Session saved! "
+                        f"You studied for "
+                        f"{hours:02d}:{minutes:02d}:{seconds:02d}."
+                    )
+
+                    st.balloons()
+
+                    time.sleep(0.5)
+
                     st.rerun()
 
-            with b_col3:
-
-                if st.button("❌ Abort"):
-
-                    st.session_state.active_focus_task = None
-                    st.session_state.is_focus_running = False
-                    st.session_state.focus_started_at = None
-                    st.session_state.focus_elapsed_before = 0
-                    st.session_state.focus_paused = False
-
-                    st.warning("Focus session aborted.")
-                    time.sleep(1)
-                    st.rerun()
-
-            # Refresh ticker if running
+            # Auto-refresh while stopwatch is running
             if not st.session_state.focus_paused:
+
                 time.sleep(1)
                 st.rerun()
 
         else:
-            st.info("Select a task from your daily list and click **'Focus Now'** to start tracking time.")
+
+            st.info(
+                "💡 Click 'Focus Now' next to any task "
+                "to start your stopwatch."
+            )
+
+
+        st.markdown(
+            "<hr style='border:1px solid #ccc;margin:20px 0;'>",
+            unsafe_allow_html=True
+        )
+
+        st.markdown(
+            '<div id="target-tracker"></div>',
+            unsafe_allow_html=True
+        )
+
+        # ====================================================
+        # DAILY SESSIONS
+        # ====================================================
+        st.markdown(
+            "### 🎯 Daily Sessions (90-Minute Target Tracker)"
+        )
+
+        st.markdown(
+            f"**Day:** {current_day_name} | "
+            f"**Date:** {formatted_display_date}"
+        )
+
+        st.caption(
+            "প্রতিটি সেশন ৯০ মিনিটের। "
+            "আপনার পড়ার লক্ষ্য অনুযায়ী নিচে টিক দিন:"
+        )
+
+
+        if today_date_str not in st.session_state.daily_sessions:
+
+            st.session_state.daily_sessions[
+                today_date_str
+            ] = {
+                "day_name": current_day_name,
+                "display_date": formatted_display_date,
+                "sessions": {
+                    f"90_{i}": False
+                    for i in range(1, 11)
+                }
+            }
+
+            permanent_save(
+                "daily_sessions",
+                DAILY_SESSIONS_FILE,
+                st.session_state.daily_sessions
+            )
+
+        else:
+
+            st.session_state.daily_sessions[
+                today_date_str
+            ]["day_name"] = current_day_name
+
+            st.session_state.daily_sessions[
+                today_date_str
+            ]["display_date"] = formatted_display_date
+
+
+        current_day_data = (
+            st.session_state.daily_sessions[
+                today_date_str
+            ]
+        )
+
+        cols_chk = st.columns(2)
+
+        session_keys = list(
+            current_day_data["sessions"].keys()
+        )
+
+        for i, s_key in enumerate(session_keys):
+
+            col_idx = i % 2
+
+            with cols_chk[col_idx]:
+
+                val = (
+                    current_day_data["sessions"][s_key]
+                )
+
+                new_val = st.checkbox(
+                    "90",
+                    value=val,
+                    key=f"ds_{today_date_str}_{i}"
+                )
+
+                if new_val != val:
+
+                    current_day_data["sessions"][
+                        s_key
+                    ] = new_val
+
+                    permanent_save(
+                        "daily_sessions",
+                        DAILY_SESSIONS_FILE,
+                        st.session_state.daily_sessions
+                    )
+
+                    st.rerun()
+
+
+        completed_count = sum(
+            1
+            for v in current_day_data["sessions"].values()
+            if v
+        )
+
+        total_minutes_today = (
+            completed_count * 90
+        )
+
+        st.markdown(
+            f"💡 **আজকের মোট পড়া হয়েছে:** "
+            f"`{total_minutes_today} মিনিট`"
+        )
+
+
+        st.markdown(
+            "<hr style='border:1px solid #ccc;margin:20px 0;'>",
+            unsafe_allow_html=True
+        )
+
+
+        # ====================================================
+        # STUDY HISTORY PDF
+        # ====================================================
+        st.markdown(
+            "#### 📥 Study History PDF Report"
+        )
+
+        if REPORTLAB_AVAILABLE:
+
+            def generate_history_pdf(
+                sessions_data
+            ):
+
+                buffer = BytesIO()
+
+                doc = SimpleDocTemplate(
+                    buffer,
+                    pagesize=letter,
+                    rightMargin=30,
+                    leftMargin=30,
+                    topMargin=30,
+                    bottomMargin=30
+                )
+
+                story = []
+
+                styles = getSampleStyleSheet()
+
+                title_style = ParagraphStyle(
+                    "TitleStyle",
+                    parent=styles["Heading1"],
+                    fontSize=16,
+                    textColor=colors.HexColor(
+                        "#FF4B4B"
+                    ),
+                    spaceAfter=15,
+                    alignment=1
+                )
+
+                cell_style = ParagraphStyle(
+                    "CellStyle",
+                    parent=styles["Normal"],
+                    fontSize=10,
+                    leading=14,
+                    textColor=colors.HexColor(
+                        "#222222"
+                    )
+                )
+
+                header_style = ParagraphStyle(
+                    "HeaderStyle",
+                    parent=styles["Normal"],
+                    fontSize=11,
+                    leading=14,
+                    fontName="Helvetica-Bold",
+                    textColor=colors.whitesmoke
+                )
+
+                story.append(
+                    Paragraph(
+                        "Daily Study History Report - Muhit",
+                        title_style
+                    )
+                )
+
+                story.append(
+                    Spacer(1, 10)
+                )
+
+                table_content = [
+                    [
+                        Paragraph("Date", header_style),
+                        Paragraph("Day", header_style),
+                        Paragraph(
+                            "Completed 90m Sessions",
+                            header_style
+                        ),
+                        Paragraph(
+                            "Total Minutes",
+                            header_style
+                        )
+                    ]
+                ]
+
+                for d_str, d_info in sorted(
+                    sessions_data.items(),
+                    reverse=True
+                ):
+
+                    comp_s = sum(
+                        1
+                        for v in d_info.get(
+                            "sessions",
+                            {}
+                        ).values()
+                        if v
+                    )
+
+                    t_mins = comp_s * 90
+
+                    table_content.append(
+                        [
+                            Paragraph(
+                                str(
+                                    d_info.get(
+                                        "display_date",
+                                        d_str
+                                    )
+                                ),
+                                cell_style
+                            ),
+                            Paragraph(
+                                str(
+                                    d_info.get(
+                                        "day_name",
+                                        ""
+                                    )
+                                ),
+                                cell_style
+                            ),
+                            Paragraph(
+                                f"{comp_s} Sessions",
+                                cell_style
+                            ),
+                            Paragraph(
+                                f"{t_mins} mins",
+                                cell_style
+                            )
+                        ]
+                    )
+
+                pdf_table = Table(
+                    table_content,
+                    colWidths=[
+                        130,
+                        110,
+                        150,
+                        110
+                    ]
+                )
+
+                pdf_table.setStyle(
+                    TableStyle([
+                        (
+                            "BACKGROUND",
+                            (0, 0),
+                            (-1, 0),
+                            colors.HexColor("#2E2E2E")
+                        ),
+                        (
+                            "ALIGN",
+                            (0, 0),
+                            (-1, -1),
+                            "LEFT"
+                        ),
+                        (
+                            "VALIGN",
+                            (0, 0),
+                            (-1, -1),
+                            "TOP"
+                        ),
+                        (
+                            "BOTTOMPADDING",
+                            (0, 0),
+                            (-1, 0),
+                            8
+                        ),
+                        (
+                            "TOPPADDING",
+                            (0, 0),
+                            (-1, 0),
+                            8
+                        ),
+                        (
+                            "BACKGROUND",
+                            (0, 1),
+                            (-1, -1),
+                            colors.HexColor("#F9F9F9")
+                        ),
+                        (
+                            "GRID",
+                            (0, 0),
+                            (-1, -1),
+                            0.5,
+                            colors.HexColor("#CCCCCC")
+                        ),
+                        (
+                            "TOPPADDING",
+                            (0, 1),
+                            (-1, -1),
+                            6
+                        ),
+                        (
+                            "BOTTOMPADDING",
+                            (0, 1),
+                            (-1, -1),
+                            6
+                        )
+                    ])
+                )
+
+                story.append(pdf_table)
+
+                doc.build(story)
+
+                buffer.seek(0)
+
+                return buffer.getvalue()
+
+
+            hist_pdf_bytes = generate_history_pdf(
+                st.session_state.daily_sessions
+            )
+
+            st.download_button(
+                label="📥 Download Study History PDF",
+                data=hist_pdf_bytes,
+                file_name="study_history_report_muhit.pdf",
+                mime="application/pdf",
+                key="dl_history_pdf"
+            )
+
+        else:
+
+            st.warning(
+                "ReportLab library is not installed."
+            )
 
 
 # ============================================================
@@ -1197,116 +1580,978 @@ if st.session_state.page == "🏠 Dashboard & Focus Station":
 # ============================================================
 elif st.session_state.page == "📖 Syllabus Tracker":
 
-    st.markdown("### 📖 HSC Syllabus Progress Tracker")
+    if st.session_state.is_focus_running:
 
-    selected_subject = st.selectbox(
-        "Select Subject",
-        list(st.session_state.syllabus.keys())
-    )
-
-    subject_data = st.session_state.syllabus[selected_subject]
-    chapters = subject_data.get("Chapters", {})
-    cols_to_use = get_subject_cols(selected_subject)
-
-    if chapters:
-
-        # Build Dataframe rows
-        table_rows = []
-        chapter_names = list(chapters.keys())
-
-        for ch in chapter_names:
-            row_data = {"Chapter": ch}
-            for col in cols_to_use:
-                row_data[col] = chapters[ch].get(col, False)
-            table_rows.append(row_data)
-
-        df = pd.DataFrame(table_rows)
-
-        # Config columns for data editor
-        column_config = {
-            "Chapter": st.column_config.TextColumn("Chapter Name", disabled=True)
-        }
-        for col in cols_to_use:
-            column_config[col] = st.column_config.CheckboxColumn(col)
-
-        edited_df = st.data_editor(
-            df,
-            column_config=column_config,
-            hide_index=True,
-            use_container_width=True,
-            key=f"editor_{selected_subject}"
+        st.error(
+            "⚠️ Focus session is currently active! "
+            "Be Consistent and Determined! "
+            "Complete your session first."
         )
 
-        # Save updates if changed
-        updated = False
-        for idx, row in edited_df.iterrows():
-            ch_name = row["Chapter"]
-            for col in cols_to_use:
-                val = bool(row[col])
-                if chapters[ch_name].get(col) != val:
-                    chapters[ch_name][col] = val
-                    updated = True
-
-        if updated:
-            permanent_save(
-                "syllabus",
-                SYLLABUS_FILE,
-                st.session_state.syllabus
-            )
-            st.toast("Progress saved successfully!")
-
     else:
-        st.info("No chapters found for this subject.")
+
+        st.title(
+            "📖 Subject & Chapter Syllabus Tracker"
+        )
+
+        st.info(
+            "⚡ Track your chapter progress below "
+            "and generate custom subject-wise PDF "
+            "performance reports instantly."
+        )
+
+        st.write("---")
+
+        st.subheader(
+            "📚 Chapter Progress Checklist"
+        )
+
+        for sub, content in (
+            st.session_state.syllabus.items()
+        ):
+
+            with st.expander(
+                f"📘 {sub}",
+                expanded=False
+            ):
+
+                chapters = content.get(
+                    "Chapters",
+                    {}
+                )
+
+                if chapters:
+
+                    target_cols = get_subject_cols(
+                        sub
+                    )
+
+                    for ch, parts in chapters.items():
+
+                        st.markdown(
+                            f"📍 **{ch}**"
+                        )
+
+                        cols = st.columns(
+                            len(target_cols)
+                        )
+
+                        for col_idx, col_name in enumerate(
+                            target_cols
+                        ):
+
+                            with cols[col_idx]:
+
+                                val = parts.get(
+                                    col_name,
+                                    False
+                                )
+
+                                chk_val = st.checkbox(
+                                    col_name,
+                                    value=val,
+                                    key=(
+                                        f"chk_{sub}_"
+                                        f"{ch}_{col_name}"
+                                    )
+                                )
+
+                                if chk_val != val:
+
+                                    st.session_state.syllabus[
+                                        sub
+                                    ]["Chapters"][
+                                        ch
+                                    ][col_name] = chk_val
+
+                                    permanent_save(
+                                        "syllabus",
+                                        SYLLABUS_FILE,
+                                        st.session_state.syllabus
+                                    )
+
+                                    st.rerun()
+
+                        st.markdown("---")
+
+                else:
+
+                    st.info(
+                        "No chapters mapped."
+                    )
+
+
+        st.write("---")
+
+        st.subheader(
+            "📊 Subject Progress & PDF Reports"
+        )
+
+        subject_names = list(
+            st.session_state.syllabus.keys()
+        )
+
+        tabs = st.tabs(
+            [
+                f"📘 {s.split(' ')[0]}"
+                for s in subject_names
+            ]
+        )
+
+
+        for idx, sub_name in enumerate(
+            subject_names
+        ):
+
+            with tabs[idx]:
+
+                st.markdown(
+                    f"#### 📑 {sub_name} Progress Report"
+                )
+
+                content = (
+                    st.session_state.syllabus[
+                        sub_name
+                    ]
+                )
+
+                chapters = content.get(
+                    "Chapters",
+                    {}
+                )
+
+                target_cols = get_subject_cols(
+                    sub_name
+                )
+
+                total_pillars = len(
+                    target_cols
+                )
+
+                sub_report_data = []
+
+                for ch, parts in chapters.items():
+
+                    completed_pillars = [
+                        col
+                        for col in target_cols
+                        if parts.get(col, False)
+                    ]
+
+                    done_count = len(
+                        completed_pillars
+                    )
+
+                    percentage = int(
+                        (
+                            done_count
+                            / total_pillars
+                        ) * 100
+                    )
+
+                    sub_report_data.append(
+                        {
+                            "Chapter Name": ch,
+                            "Completed Progress Metrics":
+                                ", ".join(
+                                    completed_pillars
+                                )
+                                if completed_pillars
+                                else "—",
+                            "Progress (%)":
+                                f"{percentage}%"
+                        }
+                    )
+
+
+                if sub_report_data:
+
+                    df_sub = pd.DataFrame(
+                        sub_report_data
+                    )
+
+                    st.dataframe(
+                        df_sub,
+                        use_container_width=True,
+                        hide_index=True
+                    )
+
+
+                    if REPORTLAB_AVAILABLE:
+
+                        def generate_subject_pdf(
+                            subject_title,
+                            dataframe
+                        ):
+
+                            buffer = BytesIO()
+
+                            doc = SimpleDocTemplate(
+                                buffer,
+                                pagesize=letter,
+                                rightMargin=30,
+                                leftMargin=30,
+                                topMargin=30,
+                                bottomMargin=30
+                            )
+
+                            story = []
+
+                            styles = getSampleStyleSheet()
+
+                            title_style = ParagraphStyle(
+                                "TitleStyle",
+                                parent=styles["Heading1"],
+                                fontSize=16,
+                                textColor=colors.HexColor(
+                                    "#FF4B4B"
+                                ),
+                                spaceAfter=15,
+                                alignment=1
+                            )
+
+                            cell_style = ParagraphStyle(
+                                "CellStyle",
+                                parent=styles["Normal"],
+                                fontSize=8,
+                                leading=12,
+                                textColor=colors.HexColor(
+                                    "#222222"
+                                )
+                            )
+
+                            header_style = ParagraphStyle(
+                                "HeaderStyle",
+                                parent=styles["Normal"],
+                                fontSize=9,
+                                leading=12,
+                                fontName="Helvetica-Bold",
+                                textColor=colors.whitesmoke
+                            )
+
+                            story.append(
+                                Paragraph(
+                                    f"Progress Report: "
+                                    f"{subject_title} (Muhit)",
+                                    title_style
+                                )
+                            )
+
+                            story.append(
+                                Spacer(1, 10)
+                            )
+
+                            table_content = [
+                                [
+                                    Paragraph(
+                                        "Chapter Name",
+                                        header_style
+                                    ),
+                                    Paragraph(
+                                        "Completed Progress Metrics",
+                                        header_style
+                                    ),
+                                    Paragraph(
+                                        "Progress (%)",
+                                        header_style
+                                    )
+                                ]
+                            ]
+
+                            for _, row in dataframe.iterrows():
+
+                                c_para = Paragraph(
+                                    str(
+                                        row[
+                                            "Chapter Name"
+                                        ]
+                                    ),
+                                    cell_style
+                                )
+
+                                m_para = Paragraph(
+                                    str(
+                                        row[
+                                            "Completed Progress Metrics"
+                                        ]
+                                    ),
+                                    cell_style
+                                )
+
+                                p_para = Paragraph(
+                                    str(
+                                        row[
+                                            "Progress (%)"
+                                        ]
+                                    ),
+                                    cell_style
+                                )
+
+                                table_content.append(
+                                    [
+                                        c_para,
+                                        m_para,
+                                        p_para
+                                    ]
+                                )
+
+
+                            pdf_table = Table(
+                                table_content,
+                                colWidths=[
+                                    220,
+                                    220,
+                                    80
+                                ],
+                                repeatRows=1
+                            )
+
+                            pdf_table.setStyle(
+                                TableStyle([
+                                    (
+                                        "BACKGROUND",
+                                        (0, 0),
+                                        (-1, 0),
+                                        colors.HexColor(
+                                            "#2E2E2E"
+                                        )
+                                    ),
+                                    (
+                                        "ALIGN",
+                                        (0, 0),
+                                        (-1, -1),
+                                        "LEFT"
+                                    ),
+                                    (
+                                        "VALIGN",
+                                        (0, 0),
+                                        (-1, -1),
+                                        "TOP"
+                                    ),
+                                    (
+                                        "BOTTOMPADDING",
+                                        (0, 0),
+                                        (-1, 0),
+                                        8
+                                    ),
+                                    (
+                                        "TOPPADDING",
+                                        (0, 0),
+                                        (-1, 0),
+                                        8
+                                    ),
+                                    (
+                                        "BACKGROUND",
+                                        (0, 1),
+                                        (-1, -1),
+                                        colors.HexColor(
+                                            "#F9F9F9"
+                                        )
+                                    ),
+                                    (
+                                        "GRID",
+                                        (0, 0),
+                                        (-1, -1),
+                                        0.5,
+                                        colors.HexColor(
+                                            "#CCCCCC"
+                                        )
+                                    ),
+                                    (
+                                        "TOPPADDING",
+                                        (0, 1),
+                                        (-1, -1),
+                                        6
+                                    ),
+                                    (
+                                        "BOTTOMPADDING",
+                                        (0, 1),
+                                        (-1, -1),
+                                        6
+                                    )
+                                ])
+                            )
+
+                            story.append(
+                                pdf_table
+                            )
+
+                            doc.build(story)
+
+                            buffer.seek(0)
+
+                            return buffer.getvalue()
+
+
+                        pdf_bytes = (
+                            generate_subject_pdf(
+                                sub_name,
+                                df_sub
+                            )
+                        )
+
+                        file_safe_name = (
+                            sub_name
+                            .split(" ")[0]
+                            .lower()
+                        )
+
+                        st.download_button(
+                            label=(
+                                f"📥 Download "
+                                f"{sub_name.split(' ')[0]} "
+                                f"PDF Report"
+                            ),
+                            data=pdf_bytes,
+                            file_name=(
+                                f"{file_safe_name}_"
+                                f"progress_report_muhit.pdf"
+                            ),
+                            mime="application/pdf",
+                            key=f"dl_pdf_{sub_name}"
+                        )
+
+                    else:
+
+                        st.warning(
+                            "ReportLab library is not installed, "
+                            "PDF generation is disabled."
+                        )
 
 
 # ============================================================
-# PAGE 3: ADMISSION EXAMS
+# PAGE 3: ADMISSION EXAM
 # ============================================================
 elif st.session_state.page == "🎓 ভর্তি পরীক্ষার তারিখ":
 
-    st.markdown("### 🎓 ভর্তি পরীক্ষার তারিখ ও কাউন্টডাউন")
+    if st.session_state.is_focus_running:
 
-    # Add new exam
-    with st.form("exam_form", clear_on_submit=True):
-        ex_name = st.text_input("পরীক্ষার নাম (যেমন: ঢাকা বিশ্ববিদ্যালয় ভর্তি পরীক্ষা)")
-        ex_date = st.date_input("পরীক্ষার তারিখ", value=datetime.today() + timedelta(days=30))
-        ex_submit = st.form_submit_button("➕ পরীক্ষা যোগ করুন")
+        st.error(
+            "⚠️ Focus session is currently active! "
+            "Be Consistent and Determined! "
+            "Complete your session first."
+        )
 
-        if ex_submit and ex_name:
-            new_ex = {
-                "id": str(int(time.time() * 1000)),
-                "name": ex_name,
-                "date": ex_date.strftime("%Y-%m-%d")
-            }
-            st.session_state.admission_exams.append(new_ex)
-            permanent_save("admission_exams", EXAMS_FILE, st.session_state.admission_exams)
-            st.success("পরীক্ষা সফলভাবে যোগ করা হয়েছে!")
-            st.rerun()
-
-    st.write("---")
-
-    if not st.session_state.admission_exams:
-        st.info("কোনো ভর্তি পরীক্ষার তারিখ যোগ করা হয়নি।")
     else:
-        for ex in st.session_state.admission_exams:
-            ex_dt = datetime.strptime(ex["date"], "%Y-%m-%d").date()
-            days_left = (ex_dt - now_bd.date()).days
 
-            col_ex1, col_ex2, col_ex3 = st.columns([2, 1, 0.5])
-            with col_ex1:
-                st.markdown(f"**{ex['name']}** ({ex['date'])})")
-            with col_ex2:
-                if days_left >= 0:
-                    st.markdown(f"⏳ **{days_left} দিন বাকি**")
-                else:
-                    st.markdown("✅ পরীক্ষা সম্পন্ন")
-            with col_ex3:
-                if st.button("🗑️", key=f"del_ex_{ex['id']}"):
-                    st.session_state.admission_exams = [
-                        e for e in st.session_state.admission_exams if e["id"] != ex["id"]
+        st.title(
+            "🎓 ভর্তি পরীক্ষার তারিখ ও শিডিউল"
+        )
+
+        st.write("---")
+
+        st.markdown(
+            "#### 📋 সংরক্ষিত ভর্তি পরীক্ষার তালিকা"
+        )
+
+
+        if not st.session_state.admission_exams:
+
+            st.info(
+                "এখনো কোনো বিশ্ববিদ্যালয়ের তথ্য যোগ করা হয়নি। "
+                "নিচে ফর্ম থেকে তথ্য যুক্ত করুন।"
+            )
+
+        else:
+
+            # =================================================
+            # ADMISSION TABLE WITH COUNTDOWN
+            # =================================================
+            header_cols = st.columns(
+                [1.8, 1.2, 1.2, 1.2, 1.2, 0.6]
+            )
+
+            with header_cols[0]:
+                st.markdown("**🏛️ University**")
+
+            with header_cols[1]:
+                st.markdown("**📝 Exam**")
+
+            with header_cols[2]:
+                st.markdown("**🚀 Start**")
+
+            with header_cols[3]:
+                st.markdown("**⏳ Deadline**")
+
+            with header_cols[4]:
+                st.markdown("**⏱️ Countdown**")
+
+            with header_cols[5]:
+                st.markdown("**🗑️**")
+
+
+            for ex in st.session_state.admission_exams:
+
+                e_c1, e_c2, e_c3, e_c4, e_c5, e_c6 = st.columns(
+                    [1.8, 1.2, 1.2, 1.2, 1.2, 0.6]
+                )
+
+                with e_c1:
+                    st.markdown(
+                        f"🏛️ **{ex['University Name']}**"
+                    )
+
+                with e_c2:
+                    st.caption(
+                        f"📝 {ex['Exam date']}"
+                    )
+
+                with e_c3:
+                    st.caption(
+                        f"🚀 {ex['1st date']}"
+                    )
+
+                with e_c4:
+                    st.caption(
+                        f"⏳ {ex['Last Date']}"
+                    )
+
+                # =================================================
+                # COUNTDOWN
+                # =================================================
+                with e_c5:
+
+                    try:
+
+                        deadline = datetime.strptime(
+                            ex["Last Date"],
+                            "%d %B, %Y"
+                        ).date()
+
+                        days_left = (
+                            deadline
+                            - now_bd.date()
+                        ).days
+
+                        if days_left > 0:
+
+                            st.markdown(
+                                f"🟢 **{days_left} days**"
+                            )
+
+                        elif days_left == 0:
+
+                            st.markdown(
+                                "🔴 **Today!**"
+                            )
+
+                        else:
+
+                            st.markdown(
+                                "⚫ **Expired**"
+                            )
+
+                    except Exception:
+
+                        st.caption(
+                            "N/A"
+                        )
+
+
+                with e_c6:
+
+                    if st.button(
+                        "🗑️",
+                        key=f"del_ex_{ex['id']}",
+                        help="ডিলিট করুন"
+                    ):
+
+                        st.session_state.admission_exams = [
+                            item
+                            for item in st.session_state.admission_exams
+                            if item["id"] != ex["id"]
+                        ]
+
+                        permanent_save(
+                            "admission_exams",
+                            EXAMS_FILE,
+                            st.session_state.admission_exams
+                        )
+
+                        st.rerun()
+
+                st.markdown(
+                    "<div style='margin:-5px 0;'></div>",
+                    unsafe_allow_html=True
+                )
+
+
+            st.write("")
+
+
+            # =================================================
+            # ADMISSION PDF
+            # =================================================
+            if REPORTLAB_AVAILABLE:
+
+                def generate_admission_pdf(
+                    exams_list
+                ):
+
+                    buffer = BytesIO()
+
+                    doc = SimpleDocTemplate(
+                        buffer,
+                        pagesize=letter,
+                        rightMargin=30,
+                        leftMargin=30,
+                        topMargin=30,
+                        bottomMargin=30
+                    )
+
+                    story = []
+
+                    styles = getSampleStyleSheet()
+
+                    title_style = ParagraphStyle(
+                        "TitleStyle",
+                        parent=styles["Heading1"],
+                        fontSize=16,
+                        textColor=colors.HexColor(
+                            "#FF4B4B"
+                        ),
+                        spaceAfter=15,
+                        alignment=1
+                    )
+
+                    cell_style = ParagraphStyle(
+                        "CellStyle",
+                        parent=styles["Normal"],
+                        fontSize=9,
+                        leading=13,
+                        textColor=colors.HexColor(
+                            "#222222"
+                        )
+                    )
+
+                    header_style = ParagraphStyle(
+                        "HeaderStyle",
+                        parent=styles["Normal"],
+                        fontSize=10,
+                        leading=13,
+                        fontName="Helvetica-Bold",
+                        textColor=colors.whitesmoke
+                    )
+
+                    story.append(
+                        Paragraph(
+                            "Admission Exam Schedule Report - Muhit",
+                            title_style
+                        )
+                    )
+
+                    story.append(
+                        Spacer(1, 10)
+                    )
+
+                    table_content = [
+                        [
+                            Paragraph(
+                                "University Name",
+                                header_style
+                            ),
+                            Paragraph(
+                                "Exam Date",
+                                header_style
+                            ),
+                            Paragraph(
+                                "1st Date",
+                                header_style
+                            ),
+                            Paragraph(
+                                "Last Date",
+                                header_style
+                            ),
+                            Paragraph(
+                                "Countdown",
+                                header_style
+                            )
+                        ]
                     ]
-                    permanent_save("admission_exams", EXAMS_FILE, st.session_state.admission_exams)
+
+
+                    for ex in exams_list:
+
+                        try:
+
+                            deadline = datetime.strptime(
+                                ex["Last Date"],
+                                "%d %B, %Y"
+                            ).date()
+
+                            days_left = (
+                                deadline
+                                - now_bd.date()
+                            ).days
+
+                            countdown = (
+                                f"{days_left} days"
+                                if days_left > 0
+                                else (
+                                    "Today"
+                                    if days_left == 0
+                                    else "Expired"
+                                )
+                            )
+
+                        except Exception:
+
+                            countdown = "N/A"
+
+
+                        table_content.append(
+                            [
+                                Paragraph(
+                                    str(
+                                        ex[
+                                            "University Name"
+                                        ]
+                                    ),
+                                    cell_style
+                                ),
+                                Paragraph(
+                                    str(
+                                        ex[
+                                            "Exam date"
+                                        ]
+                                    ),
+                                    cell_style
+                                ),
+                                Paragraph(
+                                    str(
+                                        ex[
+                                            "1st date"
+                                        ]
+                                    ),
+                                    cell_style
+                                ),
+                                Paragraph(
+                                    str(
+                                        ex[
+                                            "Last Date"
+                                        ]
+                                    ),
+                                    cell_style
+                                ),
+                                Paragraph(
+                                    countdown,
+                                    cell_style
+                                )
+                            ]
+                        )
+
+
+                    pdf_table = Table(
+                        table_content,
+                        colWidths=[
+                            125,
+                            90,
+                            95,
+                            95,
+                            75
+                        ],
+                        repeatRows=1
+                    )
+
+                    pdf_table.setStyle(
+                        TableStyle([
+                            (
+                                "BACKGROUND",
+                                (0, 0),
+                                (-1, 0),
+                                colors.HexColor(
+                                    "#2E2E2E"
+                                )
+                            ),
+                            (
+                                "ALIGN",
+                                (0, 0),
+                                (-1, -1),
+                                "LEFT"
+                            ),
+                            (
+                                "VALIGN",
+                                (0, 0),
+                                (-1, -1),
+                                "TOP"
+                            ),
+                            (
+                                "BACKGROUND",
+                                (0, 1),
+                                (-1, -1),
+                                colors.HexColor(
+                                    "#F9F9F9"
+                                )
+                            ),
+                            (
+                                "GRID",
+                                (0, 0),
+                                (-1, -1),
+                                0.5,
+                                colors.HexColor(
+                                    "#CCCCCC"
+                                )
+                            ),
+                            (
+                                "TOPPADDING",
+                                (0, 0),
+                                (-1, -1),
+                                6
+                            ),
+                            (
+                                "BOTTOMPADDING",
+                                (0, 0),
+                                (-1, -1),
+                                6
+                            )
+                        ])
+                    )
+
+                    story.append(
+                        pdf_table
+                    )
+
+                    doc.build(story)
+
+                    buffer.seek(0)
+
+                    return buffer.getvalue()
+
+
+                admission_pdf_bytes = (
+                    generate_admission_pdf(
+                        st.session_state.admission_exams
+                    )
+                )
+
+                st.download_button(
+                    label=(
+                        "📥 Download Admission "
+                        "Schedule PDF"
+                    ),
+                    data=admission_pdf_bytes,
+                    file_name=(
+                        "admission_schedule_muhit.pdf"
+                    ),
+                    mime="application/pdf",
+                    key="dl_admission_pdf"
+                )
+
+
+        st.write("---")
+
+
+        # ====================================================
+        # ADD NEW EXAM
+        # ====================================================
+        with st.form(
+            "admission_exam_form",
+            clear_on_submit=True
+        ):
+
+            st.markdown(
+                "#### ➕ নতুন ভর্তি পরীক্ষার তথ্য যোগ করুন"
+            )
+
+            f_col1, f_col2 = st.columns(2)
+
+            with f_col1:
+
+                uni_name_input = st.text_input(
+                    "University Name "
+                    "(যেমন: Dhaka University / BUET)"
+                )
+
+                exam_date_input = st.date_input(
+                    "Exam Date",
+                    value=now_bd.date(),
+                    min_value=datetime(
+                        2026, 1, 1
+                    ).date(),
+                    max_value=datetime(
+                        2027, 12, 31
+                    ).date()
+                )
+
+            with f_col2:
+
+                first_date_input = st.date_input(
+                    "1st Date "
+                    "(Application Start)",
+                    value=now_bd.date(),
+                    min_value=datetime(
+                        2026, 1, 1
+                    ).date(),
+                    max_value=datetime(
+                        2027, 12, 31
+                    ).date()
+                )
+
+                last_date_input = st.date_input(
+                    "Last Date "
+                    "(Application Deadline)",
+                    value=now_bd.date(),
+                    min_value=datetime(
+                        2026, 1, 1
+                    ).date(),
+                    max_value=datetime(
+                        2027, 12, 31
+                    ).date()
+                )
+
+
+            submit_exam = st.form_submit_button(
+                "💾 সেভ করুন"
+            )
+
+
+            if submit_exam:
+
+                if uni_name_input:
+
+                    new_exam_entry = {
+                        "id": str(
+                            int(
+                                time.time() * 1000
+                            )
+                        ),
+                        "University Name":
+                            uni_name_input,
+                        "Exam date":
+                            exam_date_input.strftime(
+                                "%d %B, %Y"
+                            ),
+                        "1st date":
+                            first_date_input.strftime(
+                                "%d %B, %Y"
+                            ),
+                        "Last Date":
+                            last_date_input.strftime(
+                                "%d %B, %Y"
+                            )
+                    }
+
+                    st.session_state.admission_exams.append(
+                        new_exam_entry
+                    )
+
+                    permanent_save(
+                        "admission_exams",
+                        EXAMS_FILE,
+                        st.session_state.admission_exams
+                    )
+
+                    st.success(
+                        "সফলভাবে ভর্তি পরীক্ষার তথ্য সংরক্ষণ করা হয়েছে!"
+                    )
+
                     st.rerun()
+
+                else:
+
+                    st.warning(
+                        "দয়া করে অন্তত University Name লিখুন।"
+                    )
 
 
 # ============================================================
@@ -1314,72 +2559,215 @@ elif st.session_state.page == "🎓 ভর্তি পরীক্ষার ত
 # ============================================================
 elif st.session_state.page == "📄 PDF Tool":
 
-    st.markdown("### 📄 PDF Merger & Splitter Tool")
+    if st.session_state.is_focus_running:
 
-    pdf_tab1, pdf_tab2 = st.tabs(["🔗 Merge PDFs", "✂️ Split PDF"])
+        st.error(
+            "⚠️ Focus session is currently active! "
+            "Be Consistent and Determined! "
+            "Complete your session first."
+        )
 
-    with pdf_tab1:
-        st.markdown("#### Merge multiple PDF files into one")
-        uploaded_files = st.file_uploader("Upload PDF files", type=["pdf"], accept_multiple_files=True, key="merge_uploader")
+    else:
 
-        if uploaded_files and len(uploaded_files) > 1:
-            if st.button("🚀 Merge PDFs"):
-                writer = PdfWriter()
-                for f in uploaded_files:
-                    reader = PdfReader(f)
-                    for page in reader.pages:
-                        writer.add_page(page)
+        st.markdown(
+            textwrap.dedent("""
+                <h2 style="
+                    text-align:center;
+                    color:#4CAF50;
+                ">
+                    👨‍💻 Mahathir Muhit Personal Workspace
+                </h2>
+            """),
+            unsafe_allow_html=True
+        )
 
-                output_stream = BytesIO()
-                writer.write(output_stream)
-                output_stream.seek(0)
+        st.markdown(
+            textwrap.dedent("""
+                <h3 style="
+                    text-align:center;
+                    color:#888888;
+                ">
+                    🤖 ২-ইন-১ পিডিএফ অটো-লেআউট টুল
+                    (নিখুঁত রেশিও)
+                </h3>
+            """),
+            unsafe_allow_html=True
+        )
 
-                st.download_button(
-                    label="📥 Download Merged PDF",
-                    data=output_stream,
-                    file_name="merged_output.pdf",
-                    mime="application/pdf"
-                )
+        st.write("---")
 
-    with pdf_tab2:
-        st.markdown("#### Extract pages from a PDF")
-        single_pdf = st.file_uploader("Upload PDF file", type=["pdf"], key="split_uploader")
+        st.write(
+            "ফাইল আপলোড করুন; ল্যান্ডস্কেপ স্লাইডগুলো "
+            "কোনো বর্ডার বা কাটিং ছাড়াই ১টি পেজে "
+            "৩টি করে নিখুঁতভাবে বসে যাবে।"
+        )
 
-        if single_pdf:
-            reader = PdfReader(single_pdf)
-            total_pages = len(reader.pages)
-            st.info(f"Total pages in PDF: {total_pages}")
 
-            page_range = st.text_input("Enter page numbers/ranges to extract (e.g., 1-3, 5):")
+        uploaded_files = st.file_uploader(
+            "আপনার পিডিএফ ফাইলগুলো এখানে সিলেক্ট করুন",
+            type=["pdf"],
+            accept_multiple_files=True,
+            key="pdf_tool_uploader"
+        )
 
-            if st.button("✂️ Extract Pages"):
-                try:
-                    writer = PdfWriter()
-                    pages_to_add = []
-                    parts = page_range.split(",")
-                    for part in parts:
-                        if "-" in part:
-                            start, end = map(int, part.split("-"))
-                            pages_to_add.extend(range(start - 1, end))
-                        else:
-                            pages_to_add.append(int(part) - 1)
 
-                    for p_idx in pages_to_add:
-                        if 0 <= p_idx < total_pages:
-                            writer.add_page(reader.pages[p_idx])
+        if uploaded_files:
 
-                    output_stream = BytesIO()
-                    writer.write(output_stream)
-                    output_stream.seek(0)
+            if st.button(
+                "🔄 প্রসেসিং শুরু করুন",
+                key="pdf_process_btn"
+            ):
 
-                    st.download_button(
-                        label="📥 Download Extracted PDF",
-                        data=output_stream,
-                        file_name="extracted_output.pdf",
-                        mime="application/pdf"
-                    )
-                except Exception as ex:
-                    st.error(f"Error parsing page range: {ex}")
+                with st.spinner(
+                    "কাজ চলছে... নিখুঁত রেশিওতে "
+                    "লেআউট তৈরি হচ্ছে..."
+                ):
+
+                    try:
+
+                        merged_writer = PdfWriter()
+
+                        for uploaded_file in uploaded_files:
+
+                            reader = PdfReader(
+                                uploaded_file
+                            )
+
+                            for page_obj in reader.pages:
+
+                                merged_writer.add_page(
+                                    page_obj
+                                )
+
+
+                        temp_merged = (
+                            "temp_merged.pdf"
+                        )
+
+                        with open(
+                            temp_merged,
+                            "wb"
+                        ) as f:
+
+                            merged_writer.write(f)
+
+
+                        output_pdf = (
+                            "processed_output.pdf"
+                        )
+
+                        final_writer = PdfWriter()
+
+                        reader = PdfReader(
+                            temp_merged
+                        )
+
+                        total_pages = len(
+                            reader.pages
+                        )
+
+
+                        for i in range(
+                            0,
+                            total_pages,
+                            3
+                        ):
+
+                            first_page = (
+                                reader.pages[i]
+                            )
+
+                            orig_w = float(
+                                first_page.mediabox.width
+                            )
+
+                            orig_h = float(
+                                first_page.mediabox.height
+                            )
+
+                            new_w = orig_w
+                            new_h = orig_h * 3
+
+                            new_page = (
+                                final_writer.add_blank_page(
+                                    width=new_w,
+                                    height=new_h
+                                )
+                            )
+
+
+                            for j in range(3):
+
+                                if (
+                                    i + j
+                                    < total_pages
+                                ):
+
+                                    current_slide = (
+                                        reader.pages[
+                                            i + j
+                                        ]
+                                    )
+
+                                    ty = (
+                                        (2 - j)
+                                        * orig_h
+                                    )
+
+                                    new_page.merge_translated_page(
+                                        current_slide,
+                                        tx=0,
+                                        ty=ty
+                                    )
+
+
+                        with open(
+                            output_pdf,
+                            "wb"
+                        ) as f:
+
+                            final_writer.write(f)
+
+
+                        if os.path.exists(
+                            temp_merged
+                        ):
+
+                            os.remove(
+                                temp_merged
+                            )
+
+
+                        st.success(
+                            "🎉 মাহাথির, আপনার নিখুঁত "
+                            "ফুল-স্ক্রিন ফাইলটি তৈরি হয়েছে!"
+                        )
+
+
+                        with open(
+                            output_pdf,
+                            "rb"
+                        ) as f:
+
+                            st.download_button(
+                                label=(
+                                    "📥 প্রসেসড পিডিএফ "
+                                    "ডাউনলোড করুন"
+                                ),
+                                data=f,
+                                file_name=(
+                                    "final_output.pdf"
+                                ),
+                                mime="application/pdf",
+                                key="pdf_download_btn"
+                            )
+
+
+                    except Exception as e:
+
+                        st.error(
+                            f"দুঃখিত, একটি সমস্যা হয়েছে: {e}"
+                        )
 
 
 # ============================================================
@@ -1387,29 +2775,207 @@ elif st.session_state.page == "📄 PDF Tool":
 # ============================================================
 elif st.session_state.page == "🎵 গানের জগত":
 
-    st.markdown("### 🎵 গানের জগত (Focus & Relaxation)")
+    if st.session_state.is_focus_running:
 
-    with st.form("song_form", clear_on_submit=True):
-        new_song_url = st.text_input("YouTube Song URL (e.g., https://youtu.be/...)")
-        add_song_btn = st.form_submit_button("➕ গান যোগ করুন")
+        st.error(
+            "⚠️ Focus session is currently active! "
+            "Complete your session first."
+        )
 
-        if add_song_btn and new_song_url:
-            st.session_state.my_songs.append(new_song_url)
-            permanent_save("songs", SONGS_FILE, st.session_state.my_songs)
-            st.success("গান সফলভাবে যোগ করা হয়েছে!")
-            st.rerun()
-
-    st.write("---")
-
-    if not st.session_state.my_songs:
-        st.info("কোনো গান যোগ করা হয়নি।")
     else:
-        for idx, song_url in enumerate(st.session_state.my_songs):
-            col_s1, col_s2 = st.columns([3, 1])
-            with col_s1:
-                st.video(song_url)
-            with col_s2:
-                if st.button("🗑️ ডিলিট", key=f"del_song_{idx}"):
-                    st.session_state.my_songs.pop(idx)
-                    permanent_save("songs", SONGS_FILE, st.session_state.my_songs)
+
+        st.title("🎵 গানের জগত")
+
+        st.info(
+            "তোমার পছন্দের গানগুলো নিচে "
+            "সরাসরি প্লেয়ারে শুনতে পারো:"
+        )
+
+        st.write("---")
+
+
+        for idx, song_url in enumerate(
+            st.session_state.my_songs,
+            1
+        ):
+
+            sc1, sc2 = st.columns(
+                [5, 1]
+            )
+
+            with sc1:
+
+                st.markdown(
+                    f"#### গান #{idx}"
+                )
+
+                try:
+
+                    st.video(song_url)
+
+                except Exception as e:
+
+                    st.error(
+                        f"গান লোড করতে সমস্যা হয়েছে: {e}"
+                    )
+
+
+            with sc2:
+
+                st.write("")
+                st.write("")
+
+                if st.button(
+                    "🗑️ মুছুন",
+                    key=f"del_song_{idx}"
+                ):
+
+                    st.session_state.my_songs.pop(
+                        idx - 1
+                    )
+
+                    permanent_save(
+                        "songs",
+                        SONGS_FILE,
+                        st.session_state.my_songs
+                    )
+
                     st.rerun()
+
+
+            st.markdown("---")
+
+
+        # ====================================================
+        # ADD SONG
+        # ====================================================
+        st.markdown(
+            "#### ➕ নতুন গান যোগ করুন"
+        )
+
+        with st.form(
+            "add_song_form",
+            clear_on_submit=True
+        ):
+
+            new_song_link = st.text_input(
+                "YouTube Song Link "
+                "(যেমন: https://youtu.be/...)"
+            )
+
+            submit_song = st.form_submit_button(
+                "💾 গান সেভ করুন"
+            )
+
+            if submit_song:
+
+                if new_song_link:
+
+                    st.session_state.my_songs.append(
+                        new_song_link
+                    )
+
+                    permanent_save(
+                        "songs",
+                        SONGS_FILE,
+                        st.session_state.my_songs
+                    )
+
+                    st.success(
+                        "নতুন গান সফলভাবে যোগ করা হয়েছে!"
+                    )
+
+                    st.rerun()
+
+                else:
+
+                    st.warning(
+                        "দয়া করে একটি সঠিক ইউটিউব লিংক দিন।"
+                    )
+
+
+# ============================================================
+# FOOTER
+# ============================================================
+if st.session_state.page in [
+    "🏠 Dashboard & Focus Station",
+    "📖 Syllabus Tracker",
+    "🎓 ভর্তি পরীক্ষার তারিখ",
+    "📄 PDF Tool"
+]:
+
+    st.markdown(
+        "<br><hr style='border:1px solid #ddd;'>",
+        unsafe_allow_html=True
+    )
+
+    c_space1, c_btn1, c_btn2, c_space2 = st.columns(
+        [1, 1, 1, 1]
+    )
+
+    with c_btn1:
+
+        if st.button("🏠 Dashboard"):
+
+            if st.session_state.is_focus_running:
+
+                st.error(
+                    "⚠️ Be Consistent and Determined!"
+                )
+
+            else:
+
+                st.session_state.page = (
+                    "🏠 Dashboard & Focus Station"
+                )
+
+                st.rerun()
+
+
+    with c_btn2:
+
+        if st.button("📖 Syllabus Tracker"):
+
+            if st.session_state.is_focus_running:
+
+                st.error(
+                    "⚠️ Be Consistent and Determined!"
+                )
+
+            else:
+
+                st.session_state.page = (
+                    "📖 Syllabus Tracker"
+                )
+
+                st.rerun()
+
+
+    st.markdown(
+        textwrap.dedent("""
+            <p style="
+                text-align:center;
+                color:gray;
+                font-size:0.85rem;
+                margin-top:15px;
+            ">
+                copyright@muhit'sportal
+            </p>
+        """),
+        unsafe_allow_html=True
+    )
+
+
+# ============================================================
+# SUPABASE STATUS
+# ============================================================
+if not SUPABASE_AVAILABLE:
+
+    st.sidebar.warning(
+        "⚠️ Supabase connection is not active."
+    )
+
+    st.sidebar.caption(
+        "Check SUPABASE_URL and SUPABASE_KEY "
+        "inside Streamlit Secrets."
+    )
