@@ -727,34 +727,12 @@ if (
 # ============================================================
 if st.session_state.page == "🏠 Dashboard & Focus Station":
 
-    # Visible headline
+    # Visible headline — use raw HTML without Markdown indentation
     st.markdown(
-        textwrap.dedent(f"""
-            <div style="
-                display:flex;
-                align-items:center;
-                gap:12px;
-                margin-bottom:20px;
-            ">
-                <span style="
-                    font-size:32px;
-                    line-height:1;
-                ">⚡</span>
-
-                <h1 style="
-                    margin:0;
-                    font-size:2.25rem;
-                    font-weight:700;
-                    color:#FF4B4B !important;
-                    display:block;
-                    visibility:visible !important;
-                    opacity:1 !important;
-                ">
-                    {remaining_days} days ahead
-                    (Consistent, Determined, Hardwork)
-                </h1>
-            </div>
-        """),
+        f"""<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+<span style="font-size:32px;line-height:1;">⚡</span>
+<h1 style="margin:0;font-size:2.25rem;font-weight:700;color:#FF4B4B !important;display:block;visibility:visible !important;opacity:1 !important;">{remaining_days} days ahead<br><span style="font-size:1rem;font-weight:500;color:#888 !important;">(Consistent, Determined, Hardwork)</span></h1>
+</div>""",
         unsafe_allow_html=True
     )
 
