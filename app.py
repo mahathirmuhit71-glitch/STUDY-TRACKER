@@ -51,24 +51,24 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-    .stMarkdown, .stText, label, p, li, span, input, textarea, select,
-    button {
-        font-size: 30px !important;
+    .stMarkdown, .stText, label, p, li,
+    input, textarea, select {
+        font-size: 22px !important;
     }
 
-    h1 { font-size: 3.6rem !important; }
-    h2 { font-size: 3.1rem !important; }
-    h3 { font-size: 2.7rem !important; }
-    h4 { font-size: 2.3rem !important; }
+    h1 { font-size: 2.35rem !important; }
+    h2 { font-size: 2rem !important; }
+    h3 { font-size: 1.7rem !important; }
+    h4 { font-size: 1.45rem !important; }
 
     [data-testid="stMetricValue"] {
-        font-size: 2.8rem !important;
+        font-size: 1.9rem !important;
     }
 
     .stButton > button,
     .stDownloadButton > button,
     .stFormSubmitButton > button {
-        font-size: 28px !important;
+        font-size: 20px !important;
         font-weight: 700 !important;
     }
     </style>
@@ -2961,7 +2961,57 @@ if st.session_state.get("data_initialized"):
 
 
 # ============================================================
-# FOOTER
+# ============================================================
+# BOTTOM NAVIGATION
+# ============================================================
+if st.session_state.page in [
+    "🏠 Dashboard & Focus Station",
+    "📖 Syllabus Tracker",
+    "🎓 ভর্তি পরীক্ষার তারিখ",
+    "📄 PDF Tool"
+]:
+
+    st.markdown(
+        "<br><hr style='border:1px solid #ddd;'>",
+        unsafe_allow_html=True
+    )
+
+    navigation_pages = [
+        "🏠 Dashboard & Focus Station",
+        "📖 Syllabus Tracker",
+        "🎓 ভর্তি পরীক্ষার তারিখ",
+        "📄 PDF Tool",
+        "🎵 গানের জগত",
+    ]
+
+    current_index = navigation_pages.index(st.session_state.page)
+
+    def bottom_navigation_changed():
+        st.session_state.page = st.session_state.bottom_navigation
+
+    st.selectbox(
+        "🧭 Go to page",
+        navigation_pages,
+        index=current_index,
+        key="bottom_navigation",
+        on_change=bottom_navigation_changed,
+    )
+
+    st.markdown(
+        textwrap.dedent("""
+            <p style="
+                text-align:center;
+                color:gray;
+                font-size:0.9rem;
+                margin-top:15px;
+            ">
+                copyright@muhit'sportal
+            </p>
+        """),
+        unsafe_allow_html=True
+    )
+
+
 # ============================================================
 if st.session_state.page in [
     "🏠 Dashboard & Focus Station",
