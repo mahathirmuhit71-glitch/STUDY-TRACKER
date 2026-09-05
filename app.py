@@ -144,17 +144,17 @@ def supabase_get(key, default=None):
         response = (
             supabase
             .table("app_data")
-            .select("data_value")
-            .eq("data_key", key)
+            .select("data")
+            .eq("key", key)
             .limit(1)
             .execute()
         )
 
         if response.data:
-            return response.data[0]["data_value"]
+            return response.data[0]["data"]
 
     except Exception:
-        pass
+        return default
 
     return default
 
@@ -166,11 +166,11 @@ def supabase_save(key, value):
     try:
         supabase.table("app_data").upsert(
             {
-                "data_key": key,
-                "data_value": value,
+                "key": key,
+                "data": value,
                 "updated_at": datetime.now(timezone.utc).isoformat()
             },
-            on_conflict="data_key"
+            on_conflict="key"
         ).execute()
 
         return True
