@@ -46,92 +46,46 @@ st.set_page_config(
 )
 
 # ============================================================
-# MOBILE-FRIENDLY RESPONSIVE CSS
+# GLOBAL READABILITY CSS
 # ============================================================
 st.markdown(
     """
     <style>
-
-    /* General readable text */
     .stMarkdown p,
-    .stMarkdown li {
-        font-size: 17px !important;
-        line-height: 1.6 !important;
+    .stMarkdown li,
+    .stCaption {
+        font-size: 18px !important;
+        line-height: 1.65 !important;
     }
 
-    /* Headings */
     h1 {
-        font-size: 2.35rem !important;
+        font-size: 2.55rem !important;
     }
 
     h2 {
-        font-size: 1.85rem !important;
+        font-size: 2.05rem !important;
     }
 
     h3 {
-        font-size: 1.45rem !important;
+        font-size: 1.65rem !important;
     }
 
-    /* Buttons */
     .stButton > button,
     .stDownloadButton > button,
     .stFormSubmitButton > button {
-        min-height: 44px !important;
-        font-size: 16px !important;
+        min-height: 46px !important;
+        font-size: 17px !important;
     }
 
-    /* Inputs */
     input,
     textarea,
     select {
-        font-size: 16px !important;
+        font-size: 17px !important;
     }
 
-    /* Mobile */
-    @media (max-width: 768px) {
-
-        .block-container {
-            padding-left: 0.8rem !important;
-            padding-right: 0.8rem !important;
-            padding-top: 1rem !important;
-            padding-bottom: 2rem !important;
-        }
-
-        h1 {
-            font-size: 1.85rem !important;
-        }
-
-        h2 {
-            font-size: 1.5rem !important;
-        }
-
-        h3 {
-            font-size: 1.25rem !important;
-        }
-
-        .stMarkdown p,
-        .stMarkdown li {
-            font-size: 17px !important;
-            line-height: 1.65 !important;
-        }
-
-        [data-testid="stHorizontalBlock"] {
-            gap: 0.5rem !important;
-        }
-
-        .stButton > button,
-        .stDownloadButton > button,
-        .stFormSubmitButton > button {
-            min-height: 46px !important;
-            font-size: 16px !important;
-            white-space: normal !important;
-        }
-
-        [data-testid="stMetricValue"] {
-            font-size: 1.5rem !important;
-        }
+    [data-testid="stMetricValue"] {
+        font-size: 1.65rem !important;
     }
-
     </style>
     """,
     unsafe_allow_html=True
