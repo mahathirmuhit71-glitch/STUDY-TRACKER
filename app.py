@@ -801,6 +801,31 @@ sidebar_selection = st.sidebar.radio(
     key="sidebar_radio"
 )
 
+# Quick navigation buttons (duplicates of the two main pages).
+st.sidebar.markdown("---")
+
+if st.sidebar.button(
+    "🏠 Dashboard",
+    key="sidebar_dashboard_button",
+    use_container_width=True
+):
+    if st.session_state.is_focus_running:
+        st.sidebar.error("⚠️ Focus session is currently active!")
+    else:
+        st.session_state.page = "🏠 Dashboard & Focus Station"
+        st.rerun()
+
+if st.sidebar.button(
+    "📖 Study Tracker",
+    key="sidebar_study_tracker_button",
+    use_container_width=True
+):
+    if st.session_state.is_focus_running:
+        st.sidebar.error("⚠️ Focus session is currently active!")
+    else:
+        st.session_state.page = "📖 Syllabus Tracker"
+        st.rerun()
+
 
 if (
     sidebar_selection != st.session_state.page
@@ -2122,29 +2147,6 @@ elif st.session_state.page == "🎓 ভর্তি পরীক্ষার ত
             # =================================================
             # ADMISSION TABLE WITH COUNTDOWN
             # =================================================
-            header_cols = st.columns(
-                [1.8, 1.2, 1.2, 1.2, 1.2, 0.6]
-            )
-
-            with header_cols[0]:
-                st.markdown("**🏛️ University**")
-
-            with header_cols[1]:
-                st.markdown("**📝 Exam**")
-
-            with header_cols[2]:
-                st.markdown("**🚀 Start**")
-
-            with header_cols[3]:
-                st.markdown("**⏳ Deadline**")
-
-            with header_cols[4]:
-                st.markdown("**⏱️ Countdown**")
-
-            with header_cols[5]:
-                st.markdown("**🗑️**")
-
-
             for ex in st.session_state.admission_exams:
 
                 e_c1, e_c2, e_c3, e_c4, e_c5, e_c6 = st.columns(
@@ -2974,58 +2976,6 @@ if st.session_state.get("data_initialized"):
 # ============================================================
 # ============================================================
 # ============================================================
-# BOTTOM NAVIGATION
-# ============================================================
-if st.session_state.page in [
-    "🏠 Dashboard & Focus Station",
-    "📖 Syllabus Tracker",
-    "🎓 ভর্তি পরীক্ষার তারিখ",
-    "📄 PDF Tool",
-    "🎵 গানের জগত",
-]:
-
-    st.markdown(
-        "<br><hr style='border:1px solid #ddd;'>",
-        unsafe_allow_html=True
-    )
-
-    nav_space1, nav_dashboard, nav_study, nav_space2 = st.columns(
-        [1, 2, 2, 1]
-    )
-
-    with nav_dashboard:
-        if st.button(
-            "🏠 Dashboard",
-            key="bottom_dashboard",
-            use_container_width=True
-        ):
-            st.session_state.page = "🏠 Dashboard & Focus Station"
-            st.rerun()
-
-    with nav_study:
-        if st.button(
-            "📖 Study Tracker",
-            key="bottom_study_tracker",
-            use_container_width=True
-        ):
-            st.session_state.page = "📖 Syllabus Tracker"
-            st.rerun()
-
-    st.markdown(
-        textwrap.dedent("""
-            <p style="
-                text-align:center;
-                color:gray;
-                font-size:0.9rem;
-                margin-top:15px;
-            ">
-                copyright@muhit'sportal
-            </p>
-        """),
-        unsafe_allow_html=True
-    )
-
-
 # SUPABASE STATUS
 # ============================================================
 if not SUPABASE_AVAILABLE:
