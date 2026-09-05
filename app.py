@@ -46,50 +46,29 @@ st.set_page_config(
 )
 
 # ============================================================
-# MOBILE-FRIENDLY RESPONSIVE CSS
+# GLOBAL FONT SIZE
 # ============================================================
 st.markdown(
     """
     <style>
-    @media (max-width: 768px) {
-        .block-container {
-            padding-left: 0.8rem !important;
-            padding-right: 0.8rem !important;
-            padding-top: 1rem !important;
-            padding-bottom: 2rem !important;
-        }
+    .stMarkdown, .stText, label, p, li, span, input, textarea, select,
+    button {
+        font-size: 18px !important;
+    }
 
-        h1 {
-            font-size: 1.65rem !important;
-        }
+    h1 { font-size: 2.45rem !important; }
+    h2 { font-size: 2.05rem !important; }
+    h3 { font-size: 1.75rem !important; }
+    h4 { font-size: 1.45rem !important; }
 
-        h2 {
-            font-size: 1.35rem !important;
-        }
+    [data-testid="stMetricValue"] {
+        font-size: 1.7rem !important;
+    }
 
-        h3 {
-            font-size: 1.1rem !important;
-        }
-
-        [data-testid="stHorizontalBlock"] {
-            gap: 0.5rem !important;
-        }
-
-        .stButton > button,
-        .stDownloadButton > button,
-        .stFormSubmitButton > button {
-            min-height: 44px !important;
-            width: 100% !important;
-            white-space: normal !important;
-        }
-
-        input, textarea, select {
-            font-size: 16px !important;
-        }
-
-        [data-testid="stMetricValue"] {
-            font-size: 1.35rem !important;
-        }
+    .stButton > button,
+    .stDownloadButton > button,
+    .stFormSubmitButton > button {
+        font-size: 18px !important;
     }
     </style>
     """,
@@ -3000,40 +2979,41 @@ if st.session_state.page in [
     )
 
     with c_btn1:
-
-        if st.button("🏠 Dashboard"):
-
+        if st.button(
+            "🏠 Dashboard",
+            key="footer_dashboard",
+            use_container_width=True
+        ):
             if st.session_state.is_focus_running:
-
                 st.error(
                     "⚠️ Be Consistent and Determined!"
                 )
-
             else:
-
                 st.session_state.page = (
                     "🏠 Dashboard & Focus Station"
                 )
-
+                st.session_state.sidebar_radio = (
+                    "🏠 Dashboard & Focus Station"
+                )
                 st.rerun()
 
-
     with c_btn2:
-
-        if st.button("📖 Syllabus Tracker"):
-
+        if st.button(
+            "📖 Study Tracker",
+            key="footer_study_tracker",
+            use_container_width=True
+        ):
             if st.session_state.is_focus_running:
-
                 st.error(
                     "⚠️ Be Consistent and Determined!"
                 )
-
             else:
-
                 st.session_state.page = (
                     "📖 Syllabus Tracker"
                 )
-
+                st.session_state.sidebar_radio = (
+                    "📖 Syllabus Tracker"
+                )
                 st.rerun()
 
 
