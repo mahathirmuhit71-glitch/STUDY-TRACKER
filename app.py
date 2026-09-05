@@ -3,6 +3,7 @@ import pandas as pd
 import json
 import os
 import time
+import textwrap
 from datetime import datetime, timedelta, timezone
 from io import BytesIO
 from pypdf import PdfReader, PdfWriter
@@ -609,15 +610,15 @@ if "focus_paused" not in st.session_state:
 if st.session_state.is_focus_running:
 
     st.markdown(
-        """
-        <script>
-        window.onbeforeunload = function (e) {
-            e.preventDefault();
-            e.returnValue = "⚠️ Focus session is active. Be Consistent and Determined!";
-            return "⚠️ Focus session is active. Be Consistent and Determined!";
-        };
-        </script>
-        """,
+        textwrap.dedent("""
+            <script>
+            window.onbeforeunload = function (e) {
+                e.preventDefault();
+                e.returnValue = "⚠️ Focus session is active. Be Consistent and Determined!";
+                return "⚠️ Focus session is active. Be Consistent and Determined!";
+            };
+            </script>
+        """),
         unsafe_allow_html=True
     )
 
@@ -728,32 +729,32 @@ if st.session_state.page == "🏠 Dashboard & Focus Station":
 
     # Visible headline
     st.markdown(
-        f"""
-        <div style="
-            display:flex;
-            align-items:center;
-            gap:12px;
-            margin-bottom:20px;
-        ">
-            <span style="
-                font-size:32px;
-                line-height:1;
-            ">⚡</span>
-
-            <h1 style="
-                margin:0;
-                font-size:2.25rem;
-                font-weight:700;
-                color:#FF4B4B !important;
-                display:block;
-                visibility:visible !important;
-                opacity:1 !important;
+        textwrap.dedent(f"""
+            <div style="
+                display:flex;
+                align-items:center;
+                gap:12px;
+                margin-bottom:20px;
             ">
-                {remaining_days} days ahead
-                (Consistent, Determined, Hardwork)
-            </h1>
-        </div>
-        """,
+                <span style="
+                    font-size:32px;
+                    line-height:1;
+                ">⚡</span>
+
+                <h1 style="
+                    margin:0;
+                    font-size:2.25rem;
+                    font-weight:700;
+                    color:#FF4B4B !important;
+                    display:block;
+                    visibility:visible !important;
+                    opacity:1 !important;
+                ">
+                    {remaining_days} days ahead
+                    (Consistent, Determined, Hardwork)
+                </h1>
+            </div>
+        """),
         unsafe_allow_html=True
     )
 
@@ -1078,31 +1079,31 @@ if st.session_state.page == "🏠 Dashboard & Focus Station":
             seconds = elapsed % 60
 
             st.markdown(
-                f"""
-                <div style="
-                    text-align:center;
-                    padding:20px;
-                    border-radius:15px;
-                    background:#111827;
-                    margin:15px 0;
-                ">
+                textwrap.dedent(f"""
                     <div style="
-                        color:#9CA3AF;
-                        font-size:15px;
+                        text-align:center;
+                        padding:20px;
+                        border-radius:15px;
+                        background:#111827;
+                        margin:15px 0;
                     ">
-                        FOCUS TIME
-                    </div>
+                        <div style="
+                            color:#9CA3AF;
+                            font-size:15px;
+                        ">
+                            FOCUS TIME
+                        </div>
 
-                    <div style="
-                        color:#00FF88;
-                        font-size:48px;
-                        font-weight:700;
-                        font-family:monospace;
-                    ">
-                        {hours:02d}:{minutes:02d}:{seconds:02d}
+                        <div style="
+                            color:#00FF88;
+                            font-size:48px;
+                            font-weight:700;
+                            font-family:monospace;
+                        ">
+                            {hours:02d}:{minutes:02d}:{seconds:02d}
+                        </div>
                     </div>
-                </div>
-                """,
+                """),
                 unsafe_allow_html=True
             )
 
@@ -2569,27 +2570,27 @@ elif st.session_state.page == "📄 PDF Tool":
     else:
 
         st.markdown(
-            """
-            <h2 style="
-                text-align:center;
-                color:#4CAF50;
-            ">
-                👨‍💻 Mahathir Muhit Personal Workspace
-            </h2>
-            """,
+            textwrap.dedent("""
+                <h2 style="
+                    text-align:center;
+                    color:#4CAF50;
+                ">
+                    👨‍💻 Mahathir Muhit Personal Workspace
+                </h2>
+            """),
             unsafe_allow_html=True
         )
 
         st.markdown(
-            """
-            <h3 style="
-                text-align:center;
-                color:#888888;
-            ">
-                🤖 ২-ইন-১ পিডিএফ অটো-লেআউট টুল
-                (নিখুঁত রেশিও)
-            </h3>
-            """,
+            textwrap.dedent("""
+                <h3 style="
+                    text-align:center;
+                    color:#888888;
+                ">
+                    🤖 ২-ইন-১ পিডিএফ অটো-লেআউট টুল
+                    (নিখুঁত রেশিও)
+                </h3>
+            """),
             unsafe_allow_html=True
         )
 
@@ -2951,16 +2952,16 @@ if st.session_state.page in [
 
 
     st.markdown(
-        """
-        <p style="
-            text-align:center;
-            color:gray;
-            font-size:0.85rem;
-            margin-top:15px;
-        ">
-            copyright@muhit'sportal
-        </p>
-        """,
+        textwrap.dedent("""
+            <p style="
+                text-align:center;
+                color:gray;
+                font-size:0.85rem;
+                margin-top:15px;
+            ">
+                copyright@muhit'sportal
+            </p>
+        """),
         unsafe_allow_html=True
     )
 
