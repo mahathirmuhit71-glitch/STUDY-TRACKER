@@ -778,6 +778,15 @@ page_index_map = {
 }
 
 
+# Apply navigation requested from the bottom selector before creating
+# the sidebar radio widget. The widget's state is cleared so it cannot
+# overwrite the newly selected page on the rerun.
+if st.session_state.get("_bottom_nav_target"):
+    st.session_state.page = st.session_state["_bottom_nav_target"]
+    del st.session_state["_bottom_nav_target"]
+    st.session_state.pop("sidebar_radio", None)
+
+
 current_index = page_index_map.get(
     st.session_state.page,
     0
@@ -2963,6 +2972,7 @@ if st.session_state.get("data_initialized"):
 # ============================================================
 # ============================================================
 # ============================================================
+# ============================================================
 # BOTTOM NAVIGATION
 # ============================================================
 if st.session_state.page in [
@@ -2995,9 +3005,8 @@ if st.session_state.page in [
         key="bottom_navigation",
     )
 
-    # Change the page after the selector is rendered, then rerun.
     if selected_page != st.session_state.page:
-        st.session_state.page = selected_page
+        st.session_state["_bottom_nav_target"] = selected_page
         st.rerun()
 
     st.markdown(
