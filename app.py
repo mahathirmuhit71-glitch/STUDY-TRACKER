@@ -3,6 +3,7 @@ import pandas as pd
 import json
 import os
 import time
+import textwrap
 from datetime import datetime, timedelta, timezone
 from io import BytesIO
 from pypdf import PdfReader, PdfWriter
@@ -42,6 +43,57 @@ st.set_page_config(
     page_title="Muhit's HSC Tracker & Workspace",
     page_icon="⚡",
     layout="wide"
+)
+
+# ============================================================
+# MOBILE-FRIENDLY RESPONSIVE CSS
+# ============================================================
+st.markdown(
+    """
+    <style>
+    @media (max-width: 768px) {
+        .block-container {
+            padding-left: 0.8rem !important;
+            padding-right: 0.8rem !important;
+            padding-top: 1rem !important;
+            padding-bottom: 2rem !important;
+        }
+
+        h1 {
+            font-size: 1.65rem !important;
+        }
+
+        h2 {
+            font-size: 1.35rem !important;
+        }
+
+        h3 {
+            font-size: 1.1rem !important;
+        }
+
+        [data-testid="stHorizontalBlock"] {
+            gap: 0.5rem !important;
+        }
+
+        .stButton > button,
+        .stDownloadButton > button,
+        .stFormSubmitButton > button {
+            min-height: 44px !important;
+            width: 100% !important;
+            white-space: normal !important;
+        }
+
+        input, textarea, select {
+            font-size: 16px !important;
+        }
+
+        [data-testid="stMetricValue"] {
+            font-size: 1.35rem !important;
+        }
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
 )
 
 # ============================================================
@@ -609,15 +661,15 @@ if "focus_paused" not in st.session_state:
 if st.session_state.is_focus_running:
 
     st.markdown(
-        """
-        <script>
-        window.onbeforeunload = function (e) {
-            e.preventDefault();
-            e.returnValue = "⚠️ Focus session is active. Be Consistent and Determined!";
-            return "⚠️ Focus session is active. Be Consistent and Determined!";
-        };
-        </script>
-        """,
+        textwrap.dedent("""
+            <script>
+            window.onbeforeunload = function (e) {
+                e.preventDefault();
+                e.returnValue = "⚠️ Focus session is active. Be Consistent and Determined!";
+                return "⚠️ Focus session is active. Be Consistent and Determined!";
+            };
+            </script>
+        """),
         unsafe_allow_html=True
     )
 
@@ -726,34 +778,12 @@ if (
 # ============================================================
 if st.session_state.page == "🏠 Dashboard & Focus Station":
 
-    # Visible headline
+    # Visible headline — use raw HTML without Markdown indentation
     st.markdown(
-        f"""
-        <div style="
-            display:flex;
-            align-items:center;
-            gap:12px;
-            margin-bottom:20px;
-        ">
-            <span style="
-                font-size:32px;
-                line-height:1;
-            ">⚡</span>
-
-            <h1 style="
-                margin:0;
-                font-size:2.25rem;
-                font-weight:700;
-                color:#FF4B4B !important;
-                display:block;
-                visibility:visible !important;
-                opacity:1 !important;
-            ">
-                {remaining_days} days ahead
-                (Consistent, Determined, Hardwork)
-            </h1>
-        </div>
-        """,
+        f"""<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+<a href="#target-tracker" title="Go to Daily Sessions" style="text-decoration:none;font-size:32px;line-height:1;display:inline-block;cursor:pointer;">⚡</a>
+<h1 style="margin:0;font-size:2.25rem;font-weight:700;color:#FF4B4B !important;display:block;visibility:visible !important;opacity:1 !important;">{remaining_days} days ahead<br><span style="font-size:1rem;font-weight:500;color:#888 !important;">(Consistent, Determined, Hardwork)</span></h1>
+</div>""",
         unsafe_allow_html=True
     )
 
@@ -1078,31 +1108,31 @@ if st.session_state.page == "🏠 Dashboard & Focus Station":
             seconds = elapsed % 60
 
             st.markdown(
-                f"""
-                <div style="
-                    text-align:center;
-                    padding:20px;
-                    border-radius:15px;
-                    background:#111827;
-                    margin:15px 0;
-                ">
+                textwrap.dedent(f"""
                     <div style="
-                        color:#9CA3AF;
-                        font-size:15px;
+                        text-align:center;
+                        padding:20px;
+                        border-radius:15px;
+                        background:#111827;
+                        margin:15px 0;
                     ">
-                        FOCUS TIME
-                    </div>
+                        <div style="
+                            color:#9CA3AF;
+                            font-size:15px;
+                        ">
+                            FOCUS TIME
+                        </div>
 
-                    <div style="
-                        color:#00FF88;
-                        font-size:48px;
-                        font-weight:700;
-                        font-family:monospace;
-                    ">
-                        {hours:02d}:{minutes:02d}:{seconds:02d}
+                        <div style="
+                            color:#00FF88;
+                            font-size:48px;
+                            font-weight:700;
+                            font-family:monospace;
+                        ">
+                            {hours:02d}:{minutes:02d}:{seconds:02d}
+                        </div>
                     </div>
-                </div>
-                """,
+                """),
                 unsafe_allow_html=True
             )
 
@@ -2569,27 +2599,27 @@ elif st.session_state.page == "📄 PDF Tool":
     else:
 
         st.markdown(
-            """
-            <h2 style="
-                text-align:center;
-                color:#4CAF50;
-            ">
-                👨‍💻 Mahathir Muhit Personal Workspace
-            </h2>
-            """,
+            textwrap.dedent("""
+                <h2 style="
+                    text-align:center;
+                    color:#4CAF50;
+                ">
+                    👨‍💻 Mahathir Muhit Personal Workspace
+                </h2>
+            """),
             unsafe_allow_html=True
         )
 
         st.markdown(
-            """
-            <h3 style="
-                text-align:center;
-                color:#888888;
-            ">
-                🤖 ২-ইন-১ পিডিএফ অটো-লেআউট টুল
-                (নিখুঁত রেশিও)
-            </h3>
-            """,
+            textwrap.dedent("""
+                <h3 style="
+                    text-align:center;
+                    color:#888888;
+                ">
+                    🤖 ২-ইন-১ পিডিএফ অটো-লেআউট টুল
+                    (নিখুঁত রেশিও)
+                </h3>
+            """),
             unsafe_allow_html=True
         )
 
@@ -2951,16 +2981,16 @@ if st.session_state.page in [
 
 
     st.markdown(
-        """
-        <p style="
-            text-align:center;
-            color:gray;
-            font-size:0.85rem;
-            margin-top:15px;
-        ">
-            copyright@muhit'sportal
-        </p>
-        """,
+        textwrap.dedent("""
+            <p style="
+                text-align:center;
+                color:gray;
+                font-size:0.85rem;
+                margin-top:15px;
+            ">
+                copyright@muhit'sportal
+            </p>
+        """),
         unsafe_allow_html=True
     )
 
