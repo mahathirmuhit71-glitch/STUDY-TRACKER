@@ -52,149 +52,83 @@ st.markdown(
     """
     <style>
 
-    /* Keep the desktop layout as it is */
-    .block-container {
-        max-width: 1400px;
+    /* General readable text */
+    .stMarkdown p,
+    .stMarkdown li {
+        font-size: 17px !important;
+        line-height: 1.6 !important;
     }
 
-    /* Prevent accidental horizontal scrolling */
-    html, body {
-        overflow-x: hidden !important;
+    /* Headings */
+    h1 {
+        font-size: 2.35rem !important;
     }
 
-    /* =========================
-       MOBILE / TABLET
-       ========================= */
+    h2 {
+        font-size: 1.85rem !important;
+    }
+
+    h3 {
+        font-size: 1.45rem !important;
+    }
+
+    /* Buttons */
+    .stButton > button,
+    .stDownloadButton > button,
+    .stFormSubmitButton > button {
+        min-height: 44px !important;
+        font-size: 16px !important;
+    }
+
+    /* Inputs */
+    input,
+    textarea,
+    select {
+        font-size: 16px !important;
+    }
+
+    /* Mobile */
     @media (max-width: 768px) {
 
         .block-container {
-            max-width: 100% !important;
-            padding: 0.75rem 0.75rem 2rem 0.75rem !important;
+            padding-left: 0.8rem !important;
+            padding-right: 0.8rem !important;
+            padding-top: 1rem !important;
+            padding-bottom: 2rem !important;
         }
 
-        /* Smaller headings */
         h1 {
-            font-size: 1.55rem !important;
-            line-height: 1.25 !important;
+            font-size: 1.85rem !important;
         }
 
         h2 {
-            font-size: 1.30rem !important;
-            line-height: 1.30 !important;
+            font-size: 1.5rem !important;
         }
 
         h3 {
-            font-size: 1.08rem !important;
-            line-height: 1.35 !important;
+            font-size: 1.25rem !important;
         }
 
-        /* Make Streamlit columns wrap naturally */
+        .stMarkdown p,
+        .stMarkdown li {
+            font-size: 17px !important;
+            line-height: 1.65 !important;
+        }
+
         [data-testid="stHorizontalBlock"] {
             gap: 0.5rem !important;
-            flex-wrap: wrap !important;
         }
 
-        /* Comfortable touch targets */
         .stButton > button,
         .stDownloadButton > button,
         .stFormSubmitButton > button {
-            min-height: 44px !important;
-            width: 100% !important;
-            padding: 0.55rem 0.7rem !important;
-            font-size: 0.95rem !important;
-            white-space: normal !important;
-            word-break: break-word !important;
-            border-radius: 10px !important;
-        }
-
-        /* Prevent iPhone/Android browser zoom on inputs */
-        input,
-        textarea,
-        select {
+            min-height: 46px !important;
             font-size: 16px !important;
-            box-sizing: border-box !important;
-        }
-
-        /* Metrics */
-        [data-testid="stMetric"] {
-            padding: 0.4rem !important;
+            white-space: normal !important;
         }
 
         [data-testid="stMetricValue"] {
-            font-size: 1.2rem !important;
-        }
-
-        /* Checkboxes */
-        [data-testid="stCheckbox"] {
-            padding: 0.15rem 0 !important;
-        }
-
-        [data-testid="stCheckbox"] label {
-            font-size: 0.95rem !important;
-        }
-
-        /* Expanders */
-        [data-testid="stExpander"] {
-            border-radius: 10px !important;
-            margin-bottom: 0.5rem !important;
-        }
-
-        /* Tables/dataframes can scroll instead of breaking the page */
-        [data-testid="stDataFrame"] {
-            width: 100% !important;
-            overflow-x: auto !important;
-        }
-
-        /* Long text/code should wrap */
-        code,
-        pre {
-            white-space: pre-wrap !important;
-            word-break: break-word !important;
-        }
-
-        /* Sidebar */
-        [data-testid="stSidebar"] {
-            max-width: 85vw !important;
-        }
-
-        /* Reduce excessive vertical gaps */
-        .element-container {
-            margin-bottom: 0.35rem !important;
-        }
-
-        /* Keep custom countdown header readable */
-        a[title="Go to Daily Sessions"] {
-            font-size: 30px !important;
-        }
-    }
-
-    /* =========================
-       SMALL PHONES
-       ========================= */
-    @media (max-width: 480px) {
-
-        .block-container {
-            padding-left: 0.55rem !important;
-            padding-right: 0.55rem !important;
-        }
-
-        h1 {
-            font-size: 1.38rem !important;
-        }
-
-        h2 {
-            font-size: 1.18rem !important;
-        }
-
-        h3 {
-            font-size: 1.02rem !important;
-        }
-
-        .stButton > button,
-        .stDownloadButton > button,
-        .stFormSubmitButton > button {
-            min-height: 42px !important;
-            font-size: 0.90rem !important;
+            font-size: 1.5rem !important;
         }
     }
 
@@ -251,39 +185,79 @@ def supabase_get(key, default=None):
         response = (
             supabase
             .table("app_data")
-            .select("data_value")
-            .eq("data_key", key)
+            .select("data")
+            .eq("key", key)
             .limit(1)
             .execute()
         )
 
         if response.data:
-            return response.data[0]["data_value"]
+            return response.data[0]["data"]
 
     except Exception:
-        pass
+        return default
 
     return default
 
 
 def supabase_save(key, value):
+    """Save one complete piece of app data to the canonical Supabase row."""
     if not SUPABASE_AVAILABLE:
         return False
 
     try:
         supabase.table("app_data").upsert(
             {
-                "data_key": key,
-                "data_value": value,
+                "key": key,
+                "data": value,
                 "updated_at": datetime.now(timezone.utc).isoformat()
             },
-            on_conflict="data_key"
+            on_conflict="key"
         ).execute()
+        return True
+    except Exception as e:
+        # Keep the error available for the UI instead of silently losing a save.
+        st.session_state["last_supabase_error"] = f"{key}: {e}"
+        return False
 
+
+def supabase_check():
+    """Return (ok, message) so the app can visibly report database health."""
+    if not SUPABASE_AVAILABLE:
+        return False, "Supabase client/secrets are not available."
+
+    try:
+        supabase.table("app_data").select("key").limit(1).execute()
+        return True, "Supabase connected"
+    except Exception as e:
+        return False, str(e)
+
+
+def save_all_data():
+    """Persist every important state object on every meaningful rerun.
+
+    This is an extra safety net in addition to the individual save calls below.
+    Supabase remains the permanent store; local JSON is only a backup.
+    """
+    if "data_initialized" not in st.session_state:
         return True
 
-    except Exception:
-        return False
+    items = [
+        ("tasks", TASKS_FILE, st.session_state.get("tasks", [])),
+        ("daily_sessions", DAILY_SESSIONS_FILE, st.session_state.get("daily_sessions", {})),
+        ("admission_exams", EXAMS_FILE, st.session_state.get("admission_exams", [])),
+        ("timer_logs", TIMER_FILE, st.session_state.get("timer_logs", [])),
+        ("songs", SONGS_FILE, st.session_state.get("my_songs", DEFAULT_SONGS)),
+        ("syllabus", SYLLABUS_FILE, st.session_state.get("syllabus", {})),
+    ]
+
+    all_ok = True
+    for key, local_file, value in items:
+        if not permanent_save(key, local_file, value):
+            all_ok = False
+
+    st.session_state["last_cloud_save"] = datetime.now(timezone.utc).astimezone().strftime("%Y-%m-%d %H:%M:%S")
+    return all_ok
 
 
 def get_permanent_data(key, local_file, default):
@@ -742,6 +716,13 @@ if "data_initialized" not in st.session_state:
 
     st.session_state.data_initialized = True
 
+# Check the connection once per browser session so a broken database is visible.
+if "supabase_health_checked" not in st.session_state:
+    ok, message = supabase_check()
+    st.session_state["supabase_health_checked"] = True
+    st.session_state["supabase_health_ok"] = ok
+    st.session_state["supabase_health_message"] = message
+
 
 # ============================================================
 # SESSION STATE
@@ -833,21 +814,21 @@ page_selection = [
     "🎵 গানের জগত"
 ]
 
-
 def handle_nav_change():
+
+    selected_page = st.session_state.sidebar_radio
 
     if st.session_state.is_focus_running:
 
-        st.sidebar.error(
-            "⚠️ Be Consistent and Determined!"
-        )
-
-        time.sleep(1.0)
-
-        # Restore dashboard
         st.session_state.sidebar_radio = st.session_state.page
 
+        st.sidebar.warning(
+            "⚠️ Focus session is active. Complete it first."
+        )
 
+        return
+
+    st.session_state.page = selected_page
 if "page" not in st.session_state:
     st.session_state.page = page_selection[0]
 
@@ -867,18 +848,13 @@ current_index = page_index_map.get(
 sidebar_selection = st.sidebar.radio(
     "Go to",
     page_selection,
-    index=current_index,
-    on_change=handle_nav_change,
-    key="sidebar_radio"
+    key="sidebar_radio",
+    on_change=handle_nav_change
 )
 
-
-if (
-    sidebar_selection != st.session_state.page
-    and not st.session_state.is_focus_running
-):
+# Keep page state synchronized with sidebar
+if not st.session_state.is_focus_running:
     st.session_state.page = sidebar_selection
-
 
 # ============================================================
 # PAGE 1: DASHBOARD
@@ -3031,6 +3007,16 @@ elif st.session_state.page == "🎵 গানের জগত":
 
 
 # ============================================================
+# FINAL CLOUD SYNC SAFETY NET
+# ============================================================
+# Every normal app rerun writes the current state to Supabase and the local
+# JSON backup. This makes refresh/reload safe for new information entered
+# through the app, even if a particular UI action missed its explicit save.
+if st.session_state.get("data_initialized"):
+    save_all_data()
+
+
+# ============================================================
 # FOOTER
 # ============================================================
 if st.session_state.page in [
@@ -3049,44 +3035,57 @@ if st.session_state.page in [
         [1, 1, 1, 1]
     )
 
-    with c_btn1:
+   with c_btn1:
 
-        if st.button("🏠 Dashboard"):
+    if st.button(
+        "🏠 Dashboard",
+        key="footer_dashboard_btn",
+        use_container_width=True
+    ):
 
-            if st.session_state.is_focus_running:
+        if st.session_state.is_focus_running:
 
-                st.error(
-                    "⚠️ Be Consistent and Determined!"
-                )
+            st.warning(
+                "⚠️ Focus session is active. Complete it first."
+            )
 
-            else:
+        else:
 
-                st.session_state.page = (
-                    "🏠 Dashboard & Focus Station"
-                )
+            st.session_state.page = (
+                "🏠 Dashboard & Focus Station"
+            )
 
-                st.rerun()
+            st.session_state.sidebar_radio = (
+                "🏠 Dashboard & Focus Station"
+            )
 
+            st.rerun()
 
-    with c_btn2:
+   with c_btn2:
 
-        if st.button("📖 Syllabus Tracker"):
+    if st.button(
+        "📖 Syllabus Tracker",
+        key="footer_syllabus_btn",
+        use_container_width=True
+    ):
 
-            if st.session_state.is_focus_running:
+        if st.session_state.is_focus_running:
 
-                st.error(
-                    "⚠️ Be Consistent and Determined!"
-                )
+            st.warning(
+                "⚠️ Focus session is active. Complete it first."
+            )
 
-            else:
+        else:
 
-                st.session_state.page = (
-                    "📖 Syllabus Tracker"
-                )
+            st.session_state.page = (
+                "📖 Syllabus Tracker"
+            )
 
-                st.rerun()
+            st.session_state.sidebar_radio = (
+                "📖 Syllabus Tracker"
+            )
 
-
+            st.rerun()
     st.markdown(
         textwrap.dedent("""
             <p style="
@@ -3106,12 +3105,26 @@ if st.session_state.page in [
 # SUPABASE STATUS
 # ============================================================
 if not SUPABASE_AVAILABLE:
+    st.sidebar.error("🔴 Supabase connection is not active.")
+    st.sidebar.caption("Check SUPABASE_URL and SUPABASE_KEY in Secrets.")
+elif st.session_state.get("supabase_health_ok"):
+    st.sidebar.success("🟢 Cloud save is active")
+    if st.session_state.get("last_cloud_save"):
+        st.sidebar.caption(f"Last sync: {st.session_state['last_cloud_save']}")
+else:
+    st.sidebar.error("🔴 Supabase is not responding")
+    st.sidebar.caption(st.session_state.get("supabase_health_message", "Unknown database error"))
 
-    st.sidebar.warning(
-        "⚠️ Supabase connection is not active."
-    )
+if st.session_state.get("last_supabase_error"):
+    with st.sidebar.expander("Last cloud-save error"):
+        st.code(st.session_state["last_supabase_error"])
+        if st.session_state.get("last_supabase_error"):
+    with st.sidebar.expander("Last cloud-save error"):
+        st.code(st.session_state["last_supabase_error"])
 
-    st.sidebar.caption(
-        "Check SUPABASE_URL and SUPABASE_KEY "
-        "inside Streamlit Secrets."
-    )
+
+# ============================================================
+# FINAL CLOUD SYNC SAFETY NET
+# ============================================================
+if st.session_state.get("data_initialized"):
+    save_all_data()
