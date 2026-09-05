@@ -2962,13 +2962,15 @@ if st.session_state.get("data_initialized"):
 
 # ============================================================
 # ============================================================
+# ============================================================
 # BOTTOM NAVIGATION
 # ============================================================
 if st.session_state.page in [
     "🏠 Dashboard & Focus Station",
     "📖 Syllabus Tracker",
     "🎓 ভর্তি পরীক্ষার তারিখ",
-    "📄 PDF Tool"
+    "📄 PDF Tool",
+    "🎵 গানের জগত",
 ]:
 
     st.markdown(
@@ -2986,16 +2988,17 @@ if st.session_state.page in [
 
     current_index = navigation_pages.index(st.session_state.page)
 
-    def bottom_navigation_changed():
-        st.session_state.page = st.session_state.bottom_navigation
-
-    st.selectbox(
+    selected_page = st.selectbox(
         "🧭 Go to page",
         navigation_pages,
         index=current_index,
         key="bottom_navigation",
-        on_change=bottom_navigation_changed,
     )
+
+    # Change the page after the selector is rendered, then rerun.
+    if selected_page != st.session_state.page:
+        st.session_state.page = selected_page
+        st.rerun()
 
     st.markdown(
         textwrap.dedent("""
@@ -3012,72 +3015,6 @@ if st.session_state.page in [
     )
 
 
-# ============================================================
-if st.session_state.page in [
-    "🏠 Dashboard & Focus Station",
-    "📖 Syllabus Tracker",
-    "🎓 ভর্তি পরীক্ষার তারিখ",
-    "📄 PDF Tool"
-]:
-
-    st.markdown(
-        "<br><hr style='border:1px solid #ddd;'>",
-        unsafe_allow_html=True
-    )
-
-    c_space1, c_btn1, c_btn2, c_space2 = st.columns(
-        [1, 1, 1, 1]
-    )
-
-    with c_btn1:
-        if st.button(
-            "🏠 Dashboard",
-            key="footer_dashboard",
-            use_container_width=True
-        ):
-            if st.session_state.is_focus_running:
-                st.error(
-                    "⚠️ Be Consistent and Determined!"
-                )
-            else:
-                st.session_state.page = (
-                    "🏠 Dashboard & Focus Station"
-                )
-                st.rerun()
-
-    with c_btn2:
-        if st.button(
-            "📖 Study Tracker",
-            key="footer_study_tracker",
-            use_container_width=True
-        ):
-            if st.session_state.is_focus_running:
-                st.error(
-                    "⚠️ Be Consistent and Determined!"
-                )
-            else:
-                st.session_state.page = (
-                    "📖 Syllabus Tracker"
-                )
-                st.rerun()
-
-
-    st.markdown(
-        textwrap.dedent("""
-            <p style="
-                text-align:center;
-                color:gray;
-                font-size:0.85rem;
-                margin-top:15px;
-            ">
-                copyright@muhit'sportal
-            </p>
-        """),
-        unsafe_allow_html=True
-    )
-
-
-# ============================================================
 # SUPABASE STATUS
 # ============================================================
 if not SUPABASE_AVAILABLE:
