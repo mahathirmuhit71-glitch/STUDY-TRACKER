@@ -53,22 +53,23 @@ st.markdown(
     <style>
     .stMarkdown, .stText, label, p, li, span, input, textarea, select,
     button {
-        font-size: 18px !important;
+        font-size: 30px !important;
     }
 
-    h1 { font-size: 2.45rem !important; }
-    h2 { font-size: 2.05rem !important; }
-    h3 { font-size: 1.75rem !important; }
-    h4 { font-size: 1.45rem !important; }
+    h1 { font-size: 3.6rem !important; }
+    h2 { font-size: 3.1rem !important; }
+    h3 { font-size: 2.7rem !important; }
+    h4 { font-size: 2.3rem !important; }
 
     [data-testid="stMetricValue"] {
-        font-size: 1.7rem !important;
+        font-size: 2.8rem !important;
     }
 
     .stButton > button,
     .stDownloadButton > button,
     .stFormSubmitButton > button {
-        font-size: 18px !important;
+        font-size: 28px !important;
+        font-weight: 700 !important;
     }
     </style>
     """,
@@ -2992,9 +2993,6 @@ if st.session_state.page in [
                 st.session_state.page = (
                     "🏠 Dashboard & Focus Station"
                 )
-                st.session_state.sidebar_radio = (
-                    "🏠 Dashboard & Focus Station"
-                )
                 st.rerun()
 
     with c_btn2:
@@ -3009,9 +3007,6 @@ if st.session_state.page in [
                 )
             else:
                 st.session_state.page = (
-                    "📖 Syllabus Tracker"
-                )
-                st.session_state.sidebar_radio = (
                     "📖 Syllabus Tracker"
                 )
                 st.rerun()
