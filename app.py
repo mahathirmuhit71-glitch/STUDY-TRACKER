@@ -2122,29 +2122,6 @@ elif st.session_state.page == "🎓 ভর্তি পরীক্ষার ত
             # =================================================
             # ADMISSION TABLE WITH COUNTDOWN
             # =================================================
-            header_cols = st.columns(
-                [1.8, 1.2, 1.2, 1.2, 1.2, 0.6]
-            )
-
-            with header_cols[0]:
-                st.markdown("**🏛️ University**")
-
-            with header_cols[1]:
-                st.markdown("**📝 Exam**")
-
-            with header_cols[2]:
-                st.markdown("**🚀 Start**")
-
-            with header_cols[3]:
-                st.markdown("**⏳ Deadline**")
-
-            with header_cols[4]:
-                st.markdown("**⏱️ Countdown**")
-
-            with header_cols[5]:
-                st.markdown("**🗑️**")
-
-
             for ex in st.session_state.admission_exams:
 
                 e_c1, e_c2, e_c3, e_c4, e_c5, e_c6 = st.columns(
