@@ -160,6 +160,7 @@ def supabase_get(key, default=None):
 
 
 def supabase_save(key, value):
+    """Save one complete piece of app data to the canonical Supabase row."""
     if not SUPABASE_AVAILABLE:
         return False
 
@@ -172,11 +173,50 @@ def supabase_save(key, value):
             },
             on_conflict="key"
         ).execute()
+        return True
+    except Exception as e:
+        # Keep the error available for the UI instead of silently losing a save.
+        st.session_state["last_supabase_error"] = f"{key}: {e}"
+        return False
 
+
+def supabase_check():
+    """Return (ok, message) so the app can visibly report database health."""
+    if not SUPABASE_AVAILABLE:
+        return False, "Supabase client/secrets are not available."
+
+    try:
+        supabase.table("app_data").select("key").limit(1).execute()
+        return True, "Supabase connected"
+    except Exception as e:
+        return False, str(e)
+
+
+def save_all_data():
+    """Persist every important state object on every meaningful rerun.
+
+    This is an extra safety net in addition to the individual save calls below.
+    Supabase remains the permanent store; local JSON is only a backup.
+    """
+    if "data_initialized" not in st.session_state:
         return True
 
-    except Exception:
-        return False
+    items = [
+        ("tasks", TASKS_FILE, st.session_state.get("tasks", [])),
+        ("daily_sessions", DAILY_SESSIONS_FILE, st.session_state.get("daily_sessions", {})),
+        ("admission_exams", EXAMS_FILE, st.session_state.get("admission_exams", [])),
+        ("timer_logs", TIMER_FILE, st.session_state.get("timer_logs", [])),
+        ("songs", SONGS_FILE, st.session_state.get("my_songs", DEFAULT_SONGS)),
+        ("syllabus", SYLLABUS_FILE, st.session_state.get("syllabus", {})),
+    ]
+
+    all_ok = True
+    for key, local_file, value in items:
+        if not permanent_save(key, local_file, value):
+            all_ok = False
+
+    st.session_state["last_cloud_save"] = datetime.now(timezone.utc).astimezone().strftime("%Y-%m-%d %H:%M:%S")
+    return all_ok
 
 
 def get_permanent_data(key, local_file, default):
@@ -634,6 +674,13 @@ if "data_initialized" not in st.session_state:
     )
 
     st.session_state.data_initialized = True
+
+# Check the connection once per browser session so a broken database is visible.
+if "supabase_health_checked" not in st.session_state:
+    ok, message = supabase_check()
+    st.session_state["supabase_health_checked"] = True
+    st.session_state["supabase_health_ok"] = ok
+    st.session_state["supabase_health_message"] = message
 
 
 # ============================================================
@@ -2924,6 +2971,16 @@ elif st.session_state.page == "🎵 গানের জগত":
 
 
 # ============================================================
+# FINAL CLOUD SYNC SAFETY NET
+# ============================================================
+# Every normal app rerun writes the current state to Supabase and the local
+# JSON backup. This makes refresh/reload safe for new information entered
+# through the app, even if a particular UI action missed its explicit save.
+if st.session_state.get("data_initialized"):
+    save_all_data()
+
+
+# ============================================================
 # FOOTER
 # ============================================================
 if st.session_state.page in [
@@ -2999,12 +3056,16 @@ if st.session_state.page in [
 # SUPABASE STATUS
 # ============================================================
 if not SUPABASE_AVAILABLE:
+    st.sidebar.error("🔴 Supabase connection is not active.")
+    st.sidebar.caption("Check SUPABASE_URL and SUPABASE_KEY in Secrets.")
+elif st.session_state.get("supabase_health_ok"):
+    st.sidebar.success("🟢 Cloud save is active")
+    if st.session_state.get("last_cloud_save"):
+        st.sidebar.caption(f"Last sync: {st.session_state['last_cloud_save']}")
+else:
+    st.sidebar.error("🔴 Supabase is not responding")
+    st.sidebar.caption(st.session_state.get("supabase_health_message", "Unknown database error"))
 
-    st.sidebar.warning(
-        "⚠️ Supabase connection is not active."
-    )
-
-    st.sidebar.caption(
-        "Check SUPABASE_URL and SUPABASE_KEY "
-        "inside Streamlit Secrets."
-    )
+if st.session_state.get("last_supabase_error"):
+    with st.sidebar.expander("Last cloud-save error"):
+        st.code(st.session_state["last_supabase_error"])
