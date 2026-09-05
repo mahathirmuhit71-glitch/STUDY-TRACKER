@@ -805,6 +805,53 @@ formatted_display_date = now_bd.strftime(
 
 
 # ============================================================
+# ADMISSION EXAM DATE HELPERS
+# ============================================================
+def parse_exam_date(exam):
+    """Convert stored Exam date text into a date for sorting/countdown."""
+    try:
+        return datetime.strptime(
+            str(exam.get("Exam date", "")).strip(),
+            "%d %B, %Y"
+        ).date()
+    except (TypeError, ValueError):
+        return None
+
+
+def sort_admission_exams(exams):
+    """
+    Show universities according to Exam Date, earliest first.
+    Invalid/missing dates are kept at the bottom instead of crashing.
+    """
+    return sorted(
+        exams,
+        key=lambda exam: (
+            parse_exam_date(exam) is None,
+            parse_exam_date(exam) or datetime.max.date()
+        )
+    )
+
+
+def get_exam_countdown(exam, today=None):
+    """Return countdown text based ONLY on that university's Exam Date."""
+    exam_date = parse_exam_date(exam)
+    if exam_date is None:
+        return "N/A"
+
+    if today is None:
+        today = now_bd.date()
+
+    days_left = (exam_date - today).days
+
+    if days_left > 0:
+        return f"{days_left} days"
+    elif days_left == 0:
+        return "Today!"
+    else:
+        return "Expired"
+
+
+# ============================================================
 # COUNTDOWN
 # ============================================================
 target_exam_date = datetime(
@@ -2320,7 +2367,7 @@ elif st.session_state.page == "🎓 ভর্তি পরীক্ষার ত
             # =================================================
             # ADMISSION TABLE WITH COUNTDOWN
             # =================================================
-            for ex in st.session_state.admission_exams:
+            for ex in sort_admission_exams(st.session_state.admission_exams):
 
                 e_c1, e_c2, e_c3, e_c4, e_c5, e_c6 = st.columns(
                     [1.8, 1.2, 1.2, 1.2, 1.2, 0.6]
@@ -2356,40 +2403,23 @@ elif st.session_state.page == "🎓 ভর্তি পরীক্ষার ত
                 # =================================================
                 with e_c5:
 
-                    try:
+                    countdown_text = get_exam_countdown(ex)
 
-                        exam_date = datetime.strptime(
-                            ex["Exam date"],
-                            "%d %B, %Y"
-                        ).date()
-
-                        days_left = (
-                            exam_date
-                            - now_bd.date()
-                        ).days
-
-                        if days_left > 0:
-
-                            st.markdown(
-                                f"🟢 **{days_left} days**"
-                            )
-
-                        elif days_left == 0:
-
-                            st.markdown(
-                                "🔴 **Today!**"
-                            )
-
-                        else:
-
-                            st.markdown(
-                                "⚫ **Expired**"
-                            )
-
-                    except Exception:
-
+                    if countdown_text == "Today!":
+                        st.markdown(
+                            "🔴 **Today!**"
+                        )
+                    elif countdown_text == "Expired":
+                        st.markdown(
+                            "⚫ **Expired**"
+                        )
+                    elif countdown_text == "N/A":
                         st.caption(
                             "N/A"
+                        )
+                    else:
+                        st.markdown(
+                            f"🟢 **{countdown_text}**"
                         )
 
 
@@ -2518,36 +2548,9 @@ elif st.session_state.page == "🎓 ভর্তি পরীক্ষার ত
                     ]
 
 
-                    for ex in exams_list:
+                    for ex in sort_admission_exams(exams_list):
 
-                        try:
-
-                            # =================================================
-                            # FIXED: COUNTDOWN BASED ON EXAM DATE
-                            # =================================================
-                            exam_date = datetime.strptime(
-                                ex["Exam date"],
-                                "%d %B, %Y"
-                            ).date()
-
-                            days_left = (
-                                exam_date
-                                - now_bd.date()
-                            ).days
-
-                            countdown = (
-                                f"{days_left} days"
-                                if days_left > 0
-                                else (
-                                    "Today"
-                                    if days_left == 0
-                                    else "Expired"
-                                )
-                            )
-
-                        except Exception:
-
-                            countdown = "N/A"
+                        countdown = get_exam_countdown(ex)
 
 
                         table_content.append(
