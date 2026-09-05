@@ -743,6 +743,7 @@ remaining_days = max(
 
 
 # ============================================================
+# ============================================================
 # NAVIGATION
 # ============================================================
 page_selection = [
@@ -753,63 +754,36 @@ page_selection = [
     "🎵 গানের জগত"
 ]
 
-
-def handle_nav_change():
-
-    if st.session_state.is_focus_running:
-
-        st.sidebar.error(
-            "⚠️ Be Consistent and Determined!"
-        )
-
-        time.sleep(1.0)
-
-        # Restore dashboard
-        st.session_state.sidebar_radio = st.session_state.page
-
-
 if "page" not in st.session_state:
     st.session_state.page = page_selection[0]
 
 
-page_index_map = {
-    page_selection[i]: i
-    for i in range(len(page_selection))
-}
+def go_to_page(target_page):
+    if st.session_state.is_focus_running:
+        st.sidebar.error("⚠️ Be Consistent and Determined!")
+    else:
+        st.session_state.page = target_page
+        st.rerun()
 
 
-# Apply navigation requested from the bottom selector before creating
-# the sidebar radio widget. The widget's state is cleared so it cannot
-# overwrite the newly selected page on the rerun.
-if st.session_state.get("_bottom_nav_target"):
-    st.session_state.page = st.session_state["_bottom_nav_target"]
-    del st.session_state["_bottom_nav_target"]
-    st.session_state.pop("sidebar_radio", None)
+# Only two navigation buttons: Dashboard and Study Tracker.
+st.sidebar.markdown("### Go to")
 
-
-current_index = page_index_map.get(
-    st.session_state.page,
-    0
-)
-
-
-sidebar_selection = st.sidebar.radio(
-    "Go to",
-    page_selection,
-    index=current_index,
-    on_change=handle_nav_change,
-    key="sidebar_radio"
-)
-
-
-if (
-    sidebar_selection != st.session_state.page
-    and not st.session_state.is_focus_running
+if st.sidebar.button(
+    "🏠 Dashboard",
+    key="sidebar_dashboard_button",
+    use_container_width=True
 ):
-    st.session_state.page = sidebar_selection
+    go_to_page("🏠 Dashboard & Focus Station")
+
+if st.sidebar.button(
+    "📖 Study Tracker",
+    key="sidebar_study_tracker_button",
+    use_container_width=True
+):
+    go_to_page("📖 Syllabus Tracker")
 
 
-# ============================================================
 # PAGE 1: DASHBOARD
 # ============================================================
 if st.session_state.page == "🏠 Dashboard & Focus Station":
@@ -2974,58 +2948,6 @@ if st.session_state.get("data_initialized"):
 # ============================================================
 # ============================================================
 # ============================================================
-# BOTTOM NAVIGATION
-# ============================================================
-if st.session_state.page in [
-    "🏠 Dashboard & Focus Station",
-    "📖 Syllabus Tracker",
-    "🎓 ভর্তি পরীক্ষার তারিখ",
-    "📄 PDF Tool",
-    "🎵 গানের জগত",
-]:
-
-    st.markdown(
-        "<br><hr style='border:1px solid #ddd;'>",
-        unsafe_allow_html=True
-    )
-
-    nav_space1, nav_dashboard, nav_study, nav_space2 = st.columns(
-        [1, 2, 2, 1]
-    )
-
-    with nav_dashboard:
-        if st.button(
-            "🏠 Dashboard",
-            key="bottom_dashboard",
-            use_container_width=True
-        ):
-            st.session_state.page = "🏠 Dashboard & Focus Station"
-            st.rerun()
-
-    with nav_study:
-        if st.button(
-            "📖 Study Tracker",
-            key="bottom_study_tracker",
-            use_container_width=True
-        ):
-            st.session_state.page = "📖 Syllabus Tracker"
-            st.rerun()
-
-    st.markdown(
-        textwrap.dedent("""
-            <p style="
-                text-align:center;
-                color:gray;
-                font-size:0.9rem;
-                margin-top:15px;
-            ">
-                copyright@muhit'sportal
-            </p>
-        """),
-        unsafe_allow_html=True
-    )
-
-
 # SUPABASE STATUS
 # ============================================================
 if not SUPABASE_AVAILABLE:
