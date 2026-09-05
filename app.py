@@ -3030,76 +3030,37 @@ if st.session_state.page in [
         "<br><hr style='border:1px solid #ddd;'>",
         unsafe_allow_html=True
     )
+# ============================================================
+# FOOTER NAVIGATION
+# ============================================================
 
-    c_space1, c_btn1, c_btn2, c_space2 = st.columns(
-        [1, 1, 1, 1]
-    )
+c_space1, c_btn1, c_btn2, c_space2 = st.columns([1, 1, 1, 1])
 
-   with c_btn1:
-
+with c_btn1:
     if st.button(
         "🏠 Dashboard",
         key="footer_dashboard_btn",
         use_container_width=True
     ):
-
         if st.session_state.is_focus_running:
-
-            st.warning(
-                "⚠️ Focus session is active. Complete it first."
-            )
-
+            st.warning("⚠️ Focus session is active. Complete it first.")
         else:
-
-            st.session_state.page = (
-                "🏠 Dashboard & Focus Station"
-            )
-
-            st.session_state.sidebar_radio = (
-                "🏠 Dashboard & Focus Station"
-            )
-
+            st.session_state.page = "🏠 Dashboard & Focus Station"
+            st.session_state.sidebar_radio = "🏠 Dashboard & Focus Station"
             st.rerun()
 
-   with c_btn2:
-
+with c_btn2:
     if st.button(
         "📖 Syllabus Tracker",
         key="footer_syllabus_btn",
         use_container_width=True
     ):
-
         if st.session_state.is_focus_running:
-
-            st.warning(
-                "⚠️ Focus session is active. Complete it first."
-            )
-
+            st.warning("⚠️ Focus session is active. Complete it first.")
         else:
-
-            st.session_state.page = (
-                "📖 Syllabus Tracker"
-            )
-
-            st.session_state.sidebar_radio = (
-                "📖 Syllabus Tracker"
-            )
-
+            st.session_state.page = "📖 Syllabus Tracker"
+            st.session_state.sidebar_radio = "📖 Syllabus Tracker"
             st.rerun()
-    st.markdown(
-        textwrap.dedent("""
-            <p style="
-                text-align:center;
-                color:gray;
-                font-size:0.85rem;
-                margin-top:15px;
-            ">
-                copyright@muhit'sportal
-            </p>
-        """),
-        unsafe_allow_html=True
-    )
-
 
 # ============================================================
 # SUPABASE STATUS
