@@ -46,45 +46,50 @@ st.set_page_config(
 )
 
 # ============================================================
-# GLOBAL READABILITY CSS
+# MOBILE-FRIENDLY RESPONSIVE CSS
 # ============================================================
 st.markdown(
     """
     <style>
-    .stMarkdown p,
-    .stMarkdown li,
-    .stCaption {
-        font-size: 18px !important;
-        line-height: 1.65 !important;
-    }
+    @media (max-width: 768px) {
+        .block-container {
+            padding-left: 0.8rem !important;
+            padding-right: 0.8rem !important;
+            padding-top: 1rem !important;
+            padding-bottom: 2rem !important;
+        }
 
-    h1 {
-        font-size: 2.55rem !important;
-    }
+        h1 {
+            font-size: 1.65rem !important;
+        }
 
-    h2 {
-        font-size: 2.05rem !important;
-    }
+        h2 {
+            font-size: 1.35rem !important;
+        }
 
-    h3 {
-        font-size: 1.65rem !important;
-    }
+        h3 {
+            font-size: 1.1rem !important;
+        }
 
-    .stButton > button,
-    .stDownloadButton > button,
-    .stFormSubmitButton > button {
-        min-height: 46px !important;
-        font-size: 17px !important;
-    }
+        [data-testid="stHorizontalBlock"] {
+            gap: 0.5rem !important;
+        }
 
-    input,
-    textarea,
-    select {
-        font-size: 17px !important;
-    }
+        .stButton > button,
+        .stDownloadButton > button,
+        .stFormSubmitButton > button {
+            min-height: 44px !important;
+            width: 100% !important;
+            white-space: normal !important;
+        }
 
-    [data-testid="stMetricValue"] {
-        font-size: 1.65rem !important;
+        input, textarea, select {
+            font-size: 16px !important;
+        }
+
+        [data-testid="stMetricValue"] {
+            font-size: 1.35rem !important;
+        }
     }
     </style>
     """,
@@ -768,21 +773,21 @@ page_selection = [
     "🎵 গানের জগত"
 ]
 
-def handle_nav_change():
 
-    selected_page = st.session_state.sidebar_radio
+def handle_nav_change():
 
     if st.session_state.is_focus_running:
 
-        st.session_state.sidebar_radio = st.session_state.page
-
-        st.sidebar.warning(
-            "⚠️ Focus session is active. Complete it first."
+        st.sidebar.error(
+            "⚠️ Be Consistent and Determined!"
         )
 
-        return
+        time.sleep(1.0)
 
-    st.session_state.page = selected_page
+        # Restore dashboard
+        st.session_state.sidebar_radio = st.session_state.page
+
+
 if "page" not in st.session_state:
     st.session_state.page = page_selection[0]
 
@@ -802,13 +807,18 @@ current_index = page_index_map.get(
 sidebar_selection = st.sidebar.radio(
     "Go to",
     page_selection,
-    key="sidebar_radio",
-    on_change=handle_nav_change
+    index=current_index,
+    on_change=handle_nav_change,
+    key="sidebar_radio"
 )
 
-# Keep page state synchronized with sidebar
-if not st.session_state.is_focus_running:
+
+if (
+    sidebar_selection != st.session_state.page
+    and not st.session_state.is_focus_running
+):
     st.session_state.page = sidebar_selection
+
 
 # ============================================================
 # PAGE 1: DASHBOARD
@@ -2984,37 +2994,63 @@ if st.session_state.page in [
         "<br><hr style='border:1px solid #ddd;'>",
         unsafe_allow_html=True
     )
-# ============================================================
-# FOOTER NAVIGATION
-# ============================================================
 
-c_space1, c_btn1, c_btn2, c_space2 = st.columns([1, 1, 1, 1])
+    c_space1, c_btn1, c_btn2, c_space2 = st.columns(
+        [1, 1, 1, 1]
+    )
 
-with c_btn1:
-    if st.button(
-        "🏠 Dashboard",
-        key="footer_dashboard_btn",
-        use_container_width=True
-    ):
-        if st.session_state.is_focus_running:
-            st.warning("⚠️ Focus session is active. Complete it first.")
-        else:
-            st.session_state.page = "🏠 Dashboard & Focus Station"
-            st.session_state.sidebar_radio = "🏠 Dashboard & Focus Station"
-            st.rerun()
+    with c_btn1:
 
-with c_btn2:
-    if st.button(
-        "📖 Syllabus Tracker",
-        key="footer_syllabus_btn",
-        use_container_width=True
-    ):
-        if st.session_state.is_focus_running:
-            st.warning("⚠️ Focus session is active. Complete it first.")
-        else:
-            st.session_state.page = "📖 Syllabus Tracker"
-            st.session_state.sidebar_radio = "📖 Syllabus Tracker"
-            st.rerun()
+        if st.button("🏠 Dashboard"):
+
+            if st.session_state.is_focus_running:
+
+                st.error(
+                    "⚠️ Be Consistent and Determined!"
+                )
+
+            else:
+
+                st.session_state.page = (
+                    "🏠 Dashboard & Focus Station"
+                )
+
+                st.rerun()
+
+
+    with c_btn2:
+
+        if st.button("📖 Syllabus Tracker"):
+
+            if st.session_state.is_focus_running:
+
+                st.error(
+                    "⚠️ Be Consistent and Determined!"
+                )
+
+            else:
+
+                st.session_state.page = (
+                    "📖 Syllabus Tracker"
+                )
+
+                st.rerun()
+
+
+    st.markdown(
+        textwrap.dedent("""
+            <p style="
+                text-align:center;
+                color:gray;
+                font-size:0.85rem;
+                margin-top:15px;
+            ">
+                copyright@muhit'sportal
+            </p>
+        """),
+        unsafe_allow_html=True
+    )
+
 
 # ============================================================
 # SUPABASE STATUS
@@ -3033,4 +3069,3 @@ else:
 if st.session_state.get("last_supabase_error"):
     with st.sidebar.expander("Last cloud-save error"):
         st.code(st.session_state["last_supabase_error"])
-       
