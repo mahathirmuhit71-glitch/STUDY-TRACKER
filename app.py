@@ -2973,6 +2973,7 @@ if st.session_state.get("data_initialized"):
 # ============================================================
 # ============================================================
 # ============================================================
+# ============================================================
 # BOTTOM NAVIGATION
 # ============================================================
 if st.session_state.page in [
@@ -2988,26 +2989,27 @@ if st.session_state.page in [
         unsafe_allow_html=True
     )
 
-    navigation_pages = [
-        "🏠 Dashboard & Focus Station",
-        "📖 Syllabus Tracker",
-        "🎓 ভর্তি পরীক্ষার তারিখ",
-        "📄 PDF Tool",
-        "🎵 গানের জগত",
-    ]
-
-    current_index = navigation_pages.index(st.session_state.page)
-
-    selected_page = st.selectbox(
-        "🧭 Go to page",
-        navigation_pages,
-        index=current_index,
-        key="bottom_navigation",
+    nav_space1, nav_dashboard, nav_study, nav_space2 = st.columns(
+        [1, 2, 2, 1]
     )
 
-    if selected_page != st.session_state.page:
-        st.session_state["_bottom_nav_target"] = selected_page
-        st.rerun()
+    with nav_dashboard:
+        if st.button(
+            "🏠 Dashboard",
+            key="bottom_dashboard",
+            use_container_width=True
+        ):
+            st.session_state.page = "🏠 Dashboard & Focus Station"
+            st.rerun()
+
+    with nav_study:
+        if st.button(
+            "📖 Study Tracker",
+            key="bottom_study_tracker",
+            use_container_width=True
+        ):
+            st.session_state.page = "📖 Syllabus Tracker"
+            st.rerun()
 
     st.markdown(
         textwrap.dedent("""
