@@ -51,153 +51,46 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-
-    /* Keep the desktop layout as it is */
-    .block-container {
-        max-width: 1400px;
-    }
-
-    /* Prevent accidental horizontal scrolling */
-    html, body {
-        overflow-x: hidden !important;
-    }
-
-    /* =========================
-       MOBILE / TABLET
-       ========================= */
     @media (max-width: 768px) {
-
         .block-container {
-            max-width: 100% !important;
-            padding: 0.75rem 0.75rem 2rem 0.75rem !important;
+            padding-left: 0.8rem !important;
+            padding-right: 0.8rem !important;
+            padding-top: 1rem !important;
+            padding-bottom: 2rem !important;
         }
 
-        /* Smaller headings */
         h1 {
-            font-size: 1.55rem !important;
-            line-height: 1.25 !important;
+            font-size: 1.65rem !important;
         }
 
         h2 {
-            font-size: 1.30rem !important;
-            line-height: 1.30 !important;
+            font-size: 1.35rem !important;
         }
 
         h3 {
-            font-size: 1.08rem !important;
-            line-height: 1.35 !important;
+            font-size: 1.1rem !important;
         }
 
-        /* Make Streamlit columns wrap naturally */
         [data-testid="stHorizontalBlock"] {
             gap: 0.5rem !important;
-            flex-wrap: wrap !important;
         }
 
-        /* Comfortable touch targets */
         .stButton > button,
         .stDownloadButton > button,
         .stFormSubmitButton > button {
             min-height: 44px !important;
             width: 100% !important;
-            padding: 0.55rem 0.7rem !important;
-            font-size: 0.95rem !important;
             white-space: normal !important;
-            word-break: break-word !important;
-            border-radius: 10px !important;
         }
 
-        /* Prevent iPhone/Android browser zoom on inputs */
-        input,
-        textarea,
-        select {
+        input, textarea, select {
             font-size: 16px !important;
-            box-sizing: border-box !important;
-        }
-
-        /* Metrics */
-        [data-testid="stMetric"] {
-            padding: 0.4rem !important;
         }
 
         [data-testid="stMetricValue"] {
-            font-size: 1.2rem !important;
-        }
-
-        /* Checkboxes */
-        [data-testid="stCheckbox"] {
-            padding: 0.15rem 0 !important;
-        }
-
-        [data-testid="stCheckbox"] label {
-            font-size: 0.95rem !important;
-        }
-
-        /* Expanders */
-        [data-testid="stExpander"] {
-            border-radius: 10px !important;
-            margin-bottom: 0.5rem !important;
-        }
-
-        /* Tables/dataframes can scroll instead of breaking the page */
-        [data-testid="stDataFrame"] {
-            width: 100% !important;
-            overflow-x: auto !important;
-        }
-
-        /* Long text/code should wrap */
-        code,
-        pre {
-            white-space: pre-wrap !important;
-            word-break: break-word !important;
-        }
-
-        /* Sidebar */
-        [data-testid="stSidebar"] {
-            max-width: 85vw !important;
-        }
-
-        /* Reduce excessive vertical gaps */
-        .element-container {
-            margin-bottom: 0.35rem !important;
-        }
-
-        /* Keep custom countdown header readable */
-        a[title="Go to Daily Sessions"] {
-            font-size: 30px !important;
+            font-size: 1.35rem !important;
         }
     }
-
-    /* =========================
-       SMALL PHONES
-       ========================= */
-    @media (max-width: 480px) {
-
-        .block-container {
-            padding-left: 0.55rem !important;
-            padding-right: 0.55rem !important;
-        }
-
-        h1 {
-            font-size: 1.38rem !important;
-        }
-
-        h2 {
-            font-size: 1.18rem !important;
-        }
-
-        h3 {
-            font-size: 1.02rem !important;
-        }
-
-        .stButton > button,
-        .stDownloadButton > button,
-        .stFormSubmitButton > button {
-            min-height: 42px !important;
-            font-size: 0.90rem !important;
-        }
-    }
-
     </style>
     """,
     unsafe_allow_html=True
@@ -251,39 +144,79 @@ def supabase_get(key, default=None):
         response = (
             supabase
             .table("app_data")
-            .select("data_value")
-            .eq("data_key", key)
+            .select("data")
+            .eq("key", key)
             .limit(1)
             .execute()
         )
 
         if response.data:
-            return response.data[0]["data_value"]
+            return response.data[0]["data"]
 
     except Exception:
-        pass
+        return default
 
     return default
 
 
 def supabase_save(key, value):
+    """Save one complete piece of app data to the canonical Supabase row."""
     if not SUPABASE_AVAILABLE:
         return False
 
     try:
         supabase.table("app_data").upsert(
             {
-                "data_key": key,
-                "data_value": value,
+                "key": key,
+                "data": value,
                 "updated_at": datetime.now(timezone.utc).isoformat()
             },
-            on_conflict="data_key"
+            on_conflict="key"
         ).execute()
+        return True
+    except Exception as e:
+        # Keep the error available for the UI instead of silently losing a save.
+        st.session_state["last_supabase_error"] = f"{key}: {e}"
+        return False
 
+
+def supabase_check():
+    """Return (ok, message) so the app can visibly report database health."""
+    if not SUPABASE_AVAILABLE:
+        return False, "Supabase client/secrets are not available."
+
+    try:
+        supabase.table("app_data").select("key").limit(1).execute()
+        return True, "Supabase connected"
+    except Exception as e:
+        return False, str(e)
+
+
+def save_all_data():
+    """Persist every important state object on every meaningful rerun.
+
+    This is an extra safety net in addition to the individual save calls below.
+    Supabase remains the permanent store; local JSON is only a backup.
+    """
+    if "data_initialized" not in st.session_state:
         return True
 
-    except Exception:
-        return False
+    items = [
+        ("tasks", TASKS_FILE, st.session_state.get("tasks", [])),
+        ("daily_sessions", DAILY_SESSIONS_FILE, st.session_state.get("daily_sessions", {})),
+        ("admission_exams", EXAMS_FILE, st.session_state.get("admission_exams", [])),
+        ("timer_logs", TIMER_FILE, st.session_state.get("timer_logs", [])),
+        ("songs", SONGS_FILE, st.session_state.get("my_songs", DEFAULT_SONGS)),
+        ("syllabus", SYLLABUS_FILE, st.session_state.get("syllabus", {})),
+    ]
+
+    all_ok = True
+    for key, local_file, value in items:
+        if not permanent_save(key, local_file, value):
+            all_ok = False
+
+    st.session_state["last_cloud_save"] = datetime.now(timezone.utc).astimezone().strftime("%Y-%m-%d %H:%M:%S")
+    return all_ok
 
 
 def get_permanent_data(key, local_file, default):
@@ -741,6 +674,13 @@ if "data_initialized" not in st.session_state:
     )
 
     st.session_state.data_initialized = True
+
+# Check the connection once per browser session so a broken database is visible.
+if "supabase_health_checked" not in st.session_state:
+    ok, message = supabase_check()
+    st.session_state["supabase_health_checked"] = True
+    st.session_state["supabase_health_ok"] = ok
+    st.session_state["supabase_health_message"] = message
 
 
 # ============================================================
@@ -3031,6 +2971,16 @@ elif st.session_state.page == "🎵 গানের জগত":
 
 
 # ============================================================
+# FINAL CLOUD SYNC SAFETY NET
+# ============================================================
+# Every normal app rerun writes the current state to Supabase and the local
+# JSON backup. This makes refresh/reload safe for new information entered
+# through the app, even if a particular UI action missed its explicit save.
+if st.session_state.get("data_initialized"):
+    save_all_data()
+
+
+# ============================================================
 # FOOTER
 # ============================================================
 if st.session_state.page in [
@@ -3106,12 +3056,16 @@ if st.session_state.page in [
 # SUPABASE STATUS
 # ============================================================
 if not SUPABASE_AVAILABLE:
+    st.sidebar.error("🔴 Supabase connection is not active.")
+    st.sidebar.caption("Check SUPABASE_URL and SUPABASE_KEY in Secrets.")
+elif st.session_state.get("supabase_health_ok"):
+    st.sidebar.success("🟢 Cloud save is active")
+    if st.session_state.get("last_cloud_save"):
+        st.sidebar.caption(f"Last sync: {st.session_state['last_cloud_save']}")
+else:
+    st.sidebar.error("🔴 Supabase is not responding")
+    st.sidebar.caption(st.session_state.get("supabase_health_message", "Unknown database error"))
 
-    st.sidebar.warning(
-        "⚠️ Supabase connection is not active."
-    )
-
-    st.sidebar.caption(
-        "Check SUPABASE_URL and SUPABASE_KEY "
-        "inside Streamlit Secrets."
-    )
+if st.session_state.get("last_supabase_error"):
+    with st.sidebar.expander("Last cloud-save error"):
+        st.code(st.session_state["last_supabase_error"])
