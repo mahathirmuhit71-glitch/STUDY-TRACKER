@@ -2156,15 +2156,15 @@ elif st.session_state.page == "🎓 ভর্তি পরীক্ষার ত
                     try:
 
                         deadline = datetime.strptime(
-                            ex["Last Date"],
-                            "%d %B, %Y"
-                        ).date()
+                          exam_date = datetime.strptime(
+    ex["Exam date"],
+    "%d %B, %Y"
+).date()
 
-                        days_left = (
-                            deadline
-                            - now_bd.date()
-                        ).days
-
+days_left = (
+    exam_date
+    - now_bd.date()
+).days
                         if days_left > 0:
 
                             st.markdown(
@@ -2317,15 +2317,15 @@ elif st.session_state.page == "🎓 ভর্তি পরীক্ষার ত
                         try:
 
                             deadline = datetime.strptime(
-                                ex["Last Date"],
-                                "%d %B, %Y"
-                            ).date()
+exam_date = datetime.strptime(
+    ex["Exam date"],
+    "%d %B, %Y"
+).date()
 
-                            days_left = (
-                                deadline
-                                - now_bd.date()
-                            ).days
-
+days_left = (
+    exam_date
+    - now_bd.date()
+).days
                             countdown = (
                                 f"{days_left} days"
                                 if days_left > 0
