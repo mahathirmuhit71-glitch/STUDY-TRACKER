@@ -3118,13 +3118,4 @@ else:
 if st.session_state.get("last_supabase_error"):
     with st.sidebar.expander("Last cloud-save error"):
         st.code(st.session_state["last_supabase_error"])
-        if st.session_state.get("last_supabase_error"):
-    with st.sidebar.expander("Last cloud-save error"):
-        st.code(st.session_state["last_supabase_error"])
-
-
-# ============================================================
-# FINAL CLOUD SYNC SAFETY NET
-# ============================================================
-if st.session_state.get("data_initialized"):
-    save_all_data()
+       
